@@ -29,9 +29,9 @@ footerContainer.innerHTML = `
           <h5 class="fw-bold">Síguenos</h5>
           <p class="text-secondary">Mantente al día con las novedades de nuestra comunidad.</p>
           <div class="d-flex gap-3">
-            <a href="https://www.facebook.com/" class="text-white fs-4" target="_blank"><i class="bi bi-facebook"></i></a>
-            <a href="https://www.instagram.com/" class="text-white fs-4" target="_blank"><i class="bi bi-instagram"></i></a>
-            <a href="https://x.com/" class="text-white fs-4" target="_blank"><i class="bi bi-twitter-x"></i></a>
+            <a href="https://www.facebook.com/profile.php?id=61595166929606" class="text-white fs-4" target="_blank"><i class="bi bi-facebook"></i></a>
+            <a href="https://www.instagram.com/ludus_real/" class="text-white fs-4" target="_blank"><i class="bi bi-instagram"></i></a>
+            <a href="https://x.com/luduss10?s=11" class="text-white fs-4" target="_blank"><i class="bi bi-twitter-x"></i></a>
           </div>
         </div>
 
