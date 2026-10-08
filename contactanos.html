@@ -95,34 +95,37 @@
           <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
             <h5 class="fw-bold mb-4">Formulario de contacto</h5>
 
-            <form id="formularioContacto" class="d-flex flex-column h-100">
+            <form id="formularioContacto" class="d-flex flex-column h-100" novalidate>
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="nombre" class="form-label">Nombre *</label>
-                  <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej. Ernesto" required>
+                  <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej. Ernesto" >
+                  <div class="invalid-feedback" id="nombre-feedback"></div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                   <label for="correo" class="form-label">Correo electrónico *</label>
-                  <input type="email" class="form-control" id="correo" name="correo" placeholder="tu@correo.com"
-                    required>
+                  <input type="email" class="form-control" id="correo" name="correo" placeholder="tu@correo.com">
+                  <div class="invalid-feedback" id="correo-feedback"></div>
                 </div>
               </div>
 
               <div class="mb-3">
                 <label for="asunto" class="form-label">Asunto *</label>
-                <select class="form-select" id="asunto" name="asunto" required>
+                <select class="form-select" id="asunto" name="asunto">
                   <option value="" disabled selected>Selecciona un asunto</option>
                   <option value="Sugerencia">Sugerencia</option>
                   <option value="Soporte">Soporte técnico</option>
                   <option value="Otro">Otro</option>
                 </select>
+                <div class="invalid-feedback" id="asunto-feedback"></div>
               </div>
 
               <div class="mb-3 flex-grow-1">
                 <label for="mensaje" class="form-label">Mensaje *</label>
                 <textarea class="form-control h-75" id="mensaje" name="mensaje" rows="5"
-                  placeholder="Escribe tu mensaje aquí..." required></textarea>
+                  placeholder="Escribe tu mensaje aquí..." ></textarea>
+                  <div class="invalid-feedback" id="mensaje-feedback"></div>
               </div>
 
               <button type="submit" class="btn btn-primary w-100 py-2 mt-auto">Enviar mensaje</button>
