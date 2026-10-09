@@ -54,8 +54,6 @@ navbar.innerHTML=`
 
 let paginaActual = window.location.pathname.split("/").pop();
 
-console.log(paginaActual)
-
 if (paginaActual === "") {
     paginaActual = "inicio.html";
 }
