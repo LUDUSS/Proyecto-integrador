@@ -1,0 +1,284 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bs-tertiary-bg);
+  /*Fondo adaptable*/
+  color: var(--bs-tertiary-bg);
+  padding: 0px;
+  margin: 0px;
+}
+
+.tarjetas-container .card {
+  background-color: var(--bs-body-bg);
+  /* Adapta el fondo al modo claro u oscuro */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: none;
+}
+
+
+.wrap {
+    width: 250px;
+    min-height: 50px;
+    background: var(--bs-body-bg);
+    position: relative;
+    margin: 24px auto;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stars {
+    width: fit-content;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+.star {
+	color: rgba(126, 106, 253) !important;
+}
+.rate {
+	height: 50px;
+	margin-left: -5px;
+	padding: 5px;
+	font-size: 25px;
+	position: relative;
+	cursor: pointer;
+}
+.rate input[type="radio"] {
+	opacity: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%,0%);
+	pointer-events: none;
+}
+.star-over::after {
+	font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+	font-size: 16px;
+	content: "\f005";
+	display: inline-block;
+	color: #d3dcff;
+	z-index: 1;
+	position: absolute;
+	top: 17px;
+	left: 10px;
+}
+
+.rate:nth-child(1) .face::after {
+	content: "\f119"; /* ☹ */
+}
+.rate:nth-child(2) .face::after {
+	content: "\f11a"; /* 😐 */
+}
+.rate:nth-child(3) .face::after {
+	content: "\f118"; /* 🙂 */
+}
+.rate:nth-child(4) .face::after {
+	content: "\f580"; /* 😊 */
+}
+.rate:nth-child(5) .face::after {
+	content: "\f59a"; /* 😄 */
+}
+.face {
+	opacity: 0;
+	position: absolute;
+	width: 35px;
+	height: 35px;
+	background: rgba(126, 106, 253);
+	border-radius: 5px;
+	top: -50px;
+	left: 2px;
+	transition: 0.2s;
+	pointer-events: none;
+}
+.face::before {
+	font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+	content: "\f0dd";
+	display: inline-block;
+	color: rgba(126, 106, 253);
+	z-index: 1;
+	position: absolute;
+	left: 9px;
+	bottom: -15px;
+}
+.face::after {
+	font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+	display: inline-block;
+	color: #fff;
+	z-index: 1;
+	position: absolute;
+	left: 5px;
+	top: -1px;
+}
+
+.rate:hover .face {
+	opacity: 1;
+}
+
+/* Not sure if I like this or not. */
+/* Makes the emoji stay displayed */
+/* input[type="radio"]:checked + .face {
+	opacity: 1 !important;
+} */
+/* Distribución general */
+.perfil-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 24px;
+    min-height: 350px;
+}
+
+.perfil-sidebar {
+    flex: 0 0 220px;
+    padding: 16px 8px;
+    background: var(--bs-body-bg);
+}
+
+.perfil-content {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+}
+
+/* Tarjeta del videojuego */
+.tarjeta-juego {
+    width: 100%;
+    max-width: 950px;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Fila de imagen y contenido */
+.tarjeta-juego__fila {
+    min-height: 320px;
+}
+
+/* Imagen: ocupa toda la altura de la tarjeta */
+.tarjeta-juego__imagen {
+    min-height: 320px;
+}
+
+.tarjeta-juego__imagen img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Columna derecha */
+.tarjeta-juego__contenido {
+    display: flex;
+    min-width: 0;
+}
+
+.tarjeta-juego__cuerpo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 24px;
+    padding: 24px;
+}
+
+/* Descripción */
+.tarjeta-juego__descripcion .card-title {
+    margin-bottom: 16px;
+}
+
+/* Calificación debajo de la descripción */
+.tarjeta-juego__calificacion {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.tarjeta-juego__calificacion h6 {
+    margin-bottom: 8px;
+}
+
+.tarjeta-juego__calificacion p {
+    margin-bottom: 12px;
+}
+
+/* Estrellas */
+.wrap {
+    width: 250px;
+    max-width: 100%;
+    min-height: 50px;
+    margin: 12px 0 0;
+    padding: 0;
+    background: transparent;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.stars {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Menú lateral */
+.perfil-sidebar .nav-link {
+    color: var(--bs-body-color);
+}
+
+/* Diseño adaptable */
+@media (max-width: 767.98px) {
+    .perfil-layout {
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .perfil-sidebar {
+        flex: auto;
+        width: 100%;
+    }
+
+    .perfil-sidebar .nav {
+        flex-direction: row !important;
+        flex-wrap: wrap;
+    }
+
+    .perfil-content {
+        width: 100%;
+    }
+
+    .tarjeta-juego__fila {
+        min-height: 0;
+    }
+
+    .tarjeta-juego__imagen {
+        height: 260px;
+        min-height: 0;
+    }
+
+    .tarjeta-juego__imagen img {
+        height: 100%;
+        min-height: 0;
+    }
+
+    .tarjeta-juego__cuerpo {
+        gap: 20px;
+        padding: 20px;
+    }
+}
