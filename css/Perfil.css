@@ -150,6 +150,35 @@ body {
     padding: 0;
 }
 
+/* Mantiene el botón agregar reseña con el color de fondo del tema actual. */
+.btn-agregar-resenia,
+.btn-agregar-resenia:hover,
+.btn-agregar-resenia:focus,
+.btn-agregar-resenia:active {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+}
+
+/* Asegura que el formulario oculto no reserve espacio en la página. */
+.formulario-resenia[hidden] {
+    display: none;
+}
+
+/* Da al formulario el ancho de las tarjetas y separa sus controles del listado. */
+.formulario-resenia {
+    max-width: 950px;
+    margin-bottom: 16px;
+    color: var(--bs-body-color);
+}
+
+/* Apila las tarjetas de reseña y deja una separación entre ellas. */
+.lista-resenias {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 /* Tarjeta del videojuego */
 .tarjeta-juego {
     width: 100%;

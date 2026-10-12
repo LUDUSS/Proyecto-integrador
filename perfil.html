@@ -55,8 +55,107 @@
         <!-- Contenido de videojuegos -->
         <section class="perfil-content">
 
-            <!-- Tarjeta del videojuego -->
-            <article class="card tarjeta-juego">
+            <!-- Botón que muestra u oculta el formulario para crear una reseña. -->
+            <div class="d-flex justify-content-end mb-3">
+                <button
+                    id="mostrar-formulario-resenia"
+                    class="btn btn-primary btn-agregar-resenia px-4 py-2"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="formulario-resenia">
+                    Agregar reseñas
+                </button>
+            </div>
+
+            <!-- Formulario de captura; permanece oculto hasta que se presiona el botón. -->
+            <form id="formulario-resenia" class="card formulario-resenia" hidden>
+                <div class="card-body">
+                    <h2 class="h5 card-title">Escribe una reseña</h2>
+
+                    <!-- Campo para el nombre del videojuego, limitado a 100 caracteres. -->
+                    <div class="mb-3">
+                        <label for="nombre-juego" class="form-label">Nombre del videojuego</label>
+                        <input
+                            id="nombre-juego"
+                            name="nombreJuego"
+                            class="form-control"
+                            type="text"
+                            maxlength="100"
+                            required>
+                    </div>
+
+                    <!-- Campo para escribir la opinión, limitado a 1000 caracteres. -->
+                    <div class="mb-3">
+                        <label for="texto-resenia" class="form-label">Tu reseña</label>
+                        <textarea
+                            id="texto-resenia"
+                            name="textoResenia"
+                            class="form-control"
+                            rows="4"
+                            maxlength="1000"
+                            required></textarea>
+                    </div>
+
+                    <!-- Selector que permite adjuntar una imagen para la tarjeta. -->
+                    <div class="mb-3">
+                        <label for="imagen-juego" class="form-label">Foto del videojuego</label>
+                        <input
+                            id="imagen-juego"
+                            name="imagenJuego"
+                            class="form-control"
+                            type="file"
+                            accept="image/*"
+                            required>
+                    </div>
+
+                    <!-- Grupo de estrellas; se debe seleccionar una calificación del 1 al 5. -->
+                    <fieldset class="mb-3">
+                        <legend class="h6">Califica tu experiencia</legend>
+                        <div class="wrap">
+                            <div class="stars">
+                                <label class="rate" aria-label="1 estrella">
+                                    <input type="radio" name="calificacion-nueva" value="1" required>
+                                    <div class="face"></div>
+                                    <i class="far fa-star star one-star"></i>
+                                </label>
+                                <label class="rate" aria-label="2 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="2">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star two-star"></i>
+                                </label>
+                                <label class="rate" aria-label="3 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="3">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star three-star"></i>
+                                </label>
+                                <label class="rate" aria-label="4 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="4">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star four-star"></i>
+                                </label>
+                                <label class="rate" aria-label="5 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="5">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star five-star"></i>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Acciones para descartar el formulario o publicar la reseña. -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <button id="cancelar-resenia" class="btn btn-outline-secondary" type="button">
+                            Cancelar
+                        </button>
+                        <button class="btn btn-primary" type="submit">Publicar reseña</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Contenedor de la tarjeta inicial y de las reseñas agregadas desde JavaScript. -->
+            <div id="lista-resenias" class="lista-resenias">
+                <!-- Tarjeta del videojuego -->
+                <article class="card tarjeta-juego">
 
                 <div class="row g-0 tarjeta-juego__fila">
 
@@ -149,7 +248,8 @@
                     </div>
 
                 </div>
-            </article>
+                </article>
+            </div>
 
         </section>
 
@@ -173,6 +273,8 @@
     <script src="./JS/footer.js"></script>
     <script src="./JS/navbar.js"></script>
     <script src="./JS/Perfil.js"></script>
+    <!-- Lógica para crear, mostrar y guardar reseñas. -->
+    <script src="./JS/resenias.js"></script>
 
 </body>
 </html>
