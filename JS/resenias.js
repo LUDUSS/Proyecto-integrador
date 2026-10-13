@@ -1,6 +1,7 @@
 (() => {
-    // Clave que identifica las reseñas guardadas en el almacenamiento del navegador.
+    // Clave que identifica las reseñas guardadas y eliminadas en el almacenamiento del navegador.
     const STORAGE_KEY = 'resenias-videojuegos';
+    const INITIAL_GAME_REMOVED_KEY = 'juego-inicial-eliminado';
 
     // Busca los elementos de la página que utiliza esta funcionalidad.
     const button = document.getElementById('mostrar-formulario-resenia');
@@ -18,12 +19,64 @@
     let savedReviews;
     try {
         savedReviews = loadReviews();
+
+        if (localStorage.getItem(INITIAL_GAME_REMOVED_KEY) === 'true') {
+            reviewsList.querySelector('[data-juego-inicial]')?.remove();
+        }
     } catch (error) {
         console.error('No se pudieron cargar las reseñas guardadas.', error);
         alert('No se pudieron cargar las reseñas guardadas. Revisa el almacenamiento del navegador.');
         button.disabled = true;
         return;
     }
+
+    // Elimina reseñas guardadas o la tarjeta inicial y conserva el cambio al recargar.
+    reviewsList.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) {
+            return;
+        }
+
+        const deleteButton = event.target.closest('.btn-accion.eliminar');
+        const card = deleteButton?.closest('.tarjeta-juego');
+        if (!card) {
+            return;
+        }
+
+        const gameName = card.querySelector('.card-title')?.textContent.trim() || 'este juego';
+        if (!window.confirm(`¿Eliminar la tarjeta de ${gameName}?`)) {
+            return;
+        }
+
+        if (card.hasAttribute('data-juego-inicial')) {
+            try {
+                localStorage.setItem(INITIAL_GAME_REMOVED_KEY, 'true');
+            } catch (error) {
+                console.error('No se pudo guardar la eliminación de la tarjeta.', error);
+                alert('No se pudo eliminar la tarjeta. Revisa el almacenamiento del navegador.');
+                return;
+            }
+
+            card.remove();
+            return;
+        }
+
+        const reviewIndex = Number(card.dataset.reviewIndex);
+        if (!Number.isInteger(reviewIndex) || reviewIndex < 0 || reviewIndex >= savedReviews.length) {
+            console.error('No se pudo identificar la reseña que se intentó eliminar.');
+            alert('No se pudo eliminar la reseña. Recarga la página e inténtalo de nuevo.');
+            return;
+        }
+
+        const updatedReviews = savedReviews.filter((_, index) => index !== reviewIndex);
+        if (!saveReviews(updatedReviews)) {
+            return;
+        }
+
+        card.remove();
+        reviewsList.querySelectorAll('.tarjeta-juego[data-review-index]').forEach((reviewCard, index) => {
+            reviewCard.dataset.reviewIndex = String(index);
+        });
+    });
 
     // Limpia los campos y devuelve los iconos de las estrellas a su apariencia inicial.
     function resetForm() {
@@ -97,7 +150,7 @@
             }
 
             // Inserta la reseña en la página y deja el formulario listo para otro registro.
-            reviewsList.appendChild(createReviewCard(newReview));
+            reviewsList.appendChild(createReviewCard(newReview, savedReviews.length - 1));
 
             resetForm();
             form.hidden = true;
@@ -146,12 +199,16 @@
     // Guarda la lista actualizada; devuelve false y muestra un aviso si falla el almacenamiento.
     function saveReview(review) {
         const updatedReviews = [...savedReviews, review];
+        return saveReviews(updatedReviews);
+    }
 
+    // Persiste el listado antes de actualizar el estado que utiliza la página.
+    function saveReviews(updatedReviews) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedReviews));
         } catch (error) {
-            console.error('No se pudo guardar la reseña en localStorage.', error);
-            alert('No se pudo guardar la reseña. El almacenamiento del navegador puede estar lleno.');
+            console.error('No se pudieron guardar los cambios en localStorage.', error);
+            alert('No se pudieron guardar los cambios. Revisa el almacenamiento del navegador.');
             return false;
         }
 
@@ -160,9 +217,22 @@
     }
 
     // Construye una tarjeta de reseña usando elementos del DOM y texto seguro.
-    function createReviewCard({ gameName, reviewText, imageSource, rating }) {
+    function createReviewCard({ gameName, reviewText, imageSource, rating }, reviewIndex) {
         const article = document.createElement('article');
         article.className = 'card tarjeta-juego';
+        article.dataset.reviewIndex = String(reviewIndex);
+    // Crea el botón de eliminar y configura su estilo, título y accesibilidad.
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'btn-accion eliminar';
+        deleteButton.title = 'Eliminar tarea';
+        deleteButton.setAttribute('aria-label', 'Eliminar tarea');
+    // Agrega el ícono de basura al botón y añade el botón al artículo.
+        const deleteIcon = document.createElement('i');
+        deleteIcon.className = 'bi bi-trash';
+        deleteIcon.setAttribute('aria-hidden', 'true');
+        deleteButton.appendChild(deleteIcon);
+        article.appendChild(deleteButton);
 
         // Crea las columnas de la tarjeta: imagen a la izquierda y contenido a la derecha.
         const row = document.createElement('div');
@@ -260,7 +330,7 @@
     }
 
     // Al iniciar la página, vuelve a dibujar todas las reseñas recuperadas del almacenamiento.
-    savedReviews.forEach((review) => {
-        reviewsList.appendChild(createReviewCard(review));
+    savedReviews.forEach((review, index) => {
+        reviewsList.appendChild(createReviewCard(review, index));
     });
 })();

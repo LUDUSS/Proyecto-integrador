@@ -155,7 +155,14 @@
             <!-- Contenedor de la tarjeta inicial y de las reseñas agregadas desde JavaScript. -->
             <div id="lista-resenias" class="lista-resenias">
                 <!-- Tarjeta del videojuego -->
-                <article class="card tarjeta-juego">
+                <article class="card tarjeta-juego" data-juego-inicial>
+                    <button
+                        type="button"
+                        class="btn-accion eliminar"
+                        title="Eliminar tarea"
+                        aria-label="Eliminar tarea">
+                        <i class="bi bi-trash" aria-hidden="true"></i>
+                    </button>
 
                 <div class="row g-0 tarjeta-juego__fila">
 
