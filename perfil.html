@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/inicio.css">
+    <link rel="stylesheet" href="./css/acercade.css">
+    <link rel="stylesheet" href="./css/Perfil.css">
+</head>
+
+<body>
+
+    <!-- Barra de navegación -->
+    <header id="navbar"></header>
+
+    <!-- Contenido principal -->
+    <main class="perfil-layout container-fluid">
+
+ <!-- Botón para mostrar el menú lateral en dispositivos móviles -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral">
+                <i class="bi bi-list"></i> Menú
+            </button>
+        </div>
+
+        <!-- Menú lateral adaptado con Bootstrap Offcanvas (oculto en móviles, fijo de md en adelante) -->
+        <aside id="menuLateral" class="perfil-sidebar card offcanvas-md offcanvas-start" tabindex="-1" aria-labelledby="menuLateralLabel">
+            <div class="offcanvas-header d-md-none">
+                <h5 class="offcanvas-title" id="menuLateralLabel">Menú</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#menuLateral" aria-label="Cerrar"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <ul class="nav flex-column w-100">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Reseñas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Perfil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Configuración</a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Contenido de videojuegos -->
+        <section class="perfil-content">
+
+            <!-- Botón que muestra u oculta el formulario para crear una reseña. -->
+            <div class="d-flex justify-content-end mb-3">
+                <button
+                    id="mostrar-formulario-resenia"
+                    class="btn btn-primary btn-agregar-resenia px-4 py-2"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="formulario-resenia">
+                    Agregar reseñas
+                </button>
+            </div>
+
+            <!-- Formulario de captura; permanece oculto hasta que se presiona el botón. -->
+            <form id="formulario-resenia" class="card formulario-resenia" hidden>
+                <div class="card-body">
+                    <h2 class="h5 card-title">Escribe una reseña</h2>
+
+                    <!-- Campo para el nombre del videojuego, limitado a 100 caracteres. -->
+                    <div class="mb-3">
+                        <label for="nombre-juego" class="form-label">Nombre del videojuego</label>
+                        <input
+                            id="nombre-juego"
+                            name="nombreJuego"
+                            class="form-control"
+                            type="text"
+                            maxlength="100"
+                            required>
+                    </div>
+
+                    <!-- Campo para escribir la opinión, limitado a 1000 caracteres. -->
+                    <div class="mb-3">
+                        <label for="texto-resenia" class="form-label">Tu reseña</label>
+                        <textarea
+                            id="texto-resenia"
+                            name="textoResenia"
+                            class="form-control"
+                            rows="4"
+                            maxlength="1000"
+                            required></textarea>
+                    </div>
+
+                    <!-- Selector que permite adjuntar una imagen para la tarjeta. -->
+                    <div class="mb-3">
+                        <label for="imagen-juego" class="form-label">Foto del videojuego</label>
+                        <input
+                            id="imagen-juego"
+                            name="imagenJuego"
+                            class="form-control"
+                            type="file"
+                            accept="image/*"
+                            required>
+                    </div>
+
+                    <!-- Grupo de estrellas; se debe seleccionar una calificación del 1 al 5. -->
+                    <fieldset class="mb-3">
+                        <legend class="h6">Califica tu experiencia</legend>
+                        <div class="wrap">
+                            <div class="stars">
+                                <label class="rate" aria-label="1 estrella">
+                                    <input type="radio" name="calificacion-nueva" value="1" required>
+                                    <div class="face"></div>
+                                    <i class="far fa-star star one-star"></i>
+                                </label>
+                                <label class="rate" aria-label="2 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="2">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star two-star"></i>
+                                </label>
+                                <label class="rate" aria-label="3 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="3">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star three-star"></i>
+                                </label>
+                                <label class="rate" aria-label="4 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="4">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star four-star"></i>
+                                </label>
+                                <label class="rate" aria-label="5 estrellas">
+                                    <input type="radio" name="calificacion-nueva" value="5">
+                                    <div class="face"></div>
+                                    <i class="far fa-star star five-star"></i>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Acciones para descartar el formulario o publicar la reseña. -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <button id="cancelar-resenia" class="btn btn-outline-secondary" type="button">
+                            Cancelar
+                        </button>
+                        <button class="btn btn-primary" type="submit">Publicar reseña</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Contenedor de la tarjeta inicial y de las reseñas agregadas desde JavaScript. -->
+            <div id="lista-resenias" class="lista-resenias">
+                <!-- Tarjeta del videojuego -->
+                <article class="card tarjeta-juego" data-juego-inicial>
+                    <button
+                        type="button"
+                        class="btn-accion eliminar"
+                        title="Eliminar tarea"
+                        aria-label="Eliminar tarea">
+                        <i class="bi bi-trash" aria-hidden="true"></i>
+                    </button>
+
+                <div class="row g-0 tarjeta-juego__fila">
+
+                    <!-- Imagen a la izquierda -->
+                    <div class="col-md-4 tarjeta-juego__imagen">
+                        <img
+                            src="./IMAGE/juegos/baldurs.jpg"
+                            alt="Baldur's Gate 3">
+                    </div>
+
+                    <!-- Descripción y calificación a la derecha -->
+                    <div class="col-md-8 tarjeta-juego__contenido">
+
+                        <div class="card-body tarjeta-juego__cuerpo">
+
+                            <!-- Descripción -->
+                            <div class="tarjeta-juego__descripcion">
+                                <h5 class="card-title">
+                                    Baldur's Gate 3
+                                </h5>
+
+                                <p class="card-text">
+                                    Descubre este videojuego de rol y fantasía,
+                                    toma decisiones que cambiarán tu aventura
+                                    y comparte tu experiencia con otros jugadores.
+                                </p>
+
+                                <p class="card-text">
+                                    <small class="text-body-secondary">
+                                        Comparte tu opinión sobre este juego.
+                                    </small>
+                                </p>
+                            </div>
+
+                            <!-- Calificación debajo de la descripción -->
+                            <div class="tarjeta-juego__calificacion">
+
+                                <h6 class="card-title">
+                                    Califica tu experiencia
+                                </h6>
+
+                                <p class="card-text">
+                                    ¿Qué te pareció este videojuego?
+                                </p>
+
+                                <div class="wrap">
+                                    <div class="stars">
+
+                                        <label class="rate">
+                                            <input type="radio" name="radio1"
+                                                id="star1" value="star1">
+                                            <div class="face"></div>
+                                            <i class="far fa-star star one-star"></i>
+                                        </label>
+
+                                        <label class="rate">
+                                            <input type="radio" name="radio1"
+                                                id="star2" value="star2">
+                                            <div class="face"></div>
+                                            <i class="far fa-star star two-star"></i>
+                                        </label>
+
+                                        <label class="rate">
+                                            <input type="radio" name="radio1"
+                                                id="star3" value="star3">
+                                            <div class="face"></div>
+                                            <i class="far fa-star star three-star"></i>
+                                        </label>
+
+                                        <label class="rate">
+                                            <input type="radio" name="radio1"
+                                                id="star4" value="star4">
+                                            <div class="face"></div>
+                                            <i class="far fa-star star four-star"></i>
+                                        </label>
+
+                                        <label class="rate">
+                                            <input type="radio" name="radio1"
+                                                id="star5" value="star5">
+                                            <div class="face"></div>
+                                            <i class="far fa-star star five-star"></i>
+                                        </label>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                </article>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer"></footer>
+
+    <!-- Bootstrap -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Scripts personalizados -->
+    <script src="./JS/header.js"></script>
+    <script src="./JS/theme.js"></script>
+    <script src="./JS/footer.js"></script>
+    <script src="./JS/navbar.js"></script>
+    <script src="./JS/Perfil.js"></script>
+    <!-- Lógica para crear, mostrar y guardar reseñas. -->
+    <script src="./JS/resenias.js"></script>
+
+</body>
+</html>

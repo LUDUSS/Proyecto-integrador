@@ -19,54 +19,7 @@
 <body class="d-flex flex-column min-vh-100"> 
 
   <!-- BARRA DE NAVEGACIÓN ESTÁNDAR -->
-  <nav class="navbar navbar-expand-lg nav-custom border-bottom">
-    <div class="container-fluid px-lg-5">
-
-      <!-- LOGO Y TÍTULO -->
-      <a class="navbar-brand d-flex align-items-center gap-2 brand-ludus" href="./inicio.html">
-        <img src="IMAGE/logo_dark.png" alt="Logo LUDUS" class="brand-logo-img logo-dark">
-        <img src="IMAGE/logo_light.png" alt="Logo LUDUS" class="brand-logo-img logo-light">
-        <span>LUDUS</span>
-      </a>
-
-      <!-- BOTÓN RESPONSIVO PARA MÓVILES -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <!-- CONTENIDO COLAPSABLE -->
-      <div class="collapse navbar-collapse" id="navbarContent">
-        <!-- Menú Centrado con separación idéntica (gap-3) -->
-        <ul class="navbar-nav mx-auto align-items-center gap-3 mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="./inicio.html">Inicio</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link text-nowrap" href="./inicio.html#juegosDestacados">Juegos Destacados</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link nav-link-active" href="./contactanos.html">Contáctanos</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./acercade.html">Acerca de nosotros</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="./perfil.html">Mi perfil</a>
-          </li>
-        </ul>
-
-        <!-- BOTONES DERECHA -->
-        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-          <button id="theme-toggle" class="btn btn-outline-secondary btn-sm">
-            Modo oscuro
-          </button>
-          <button class="btn btn-login text-nowrap" type="button">Iniciar sesión</button>
-        </div>
-      </div>
-
-    </div>
-  </nav>
+  <header id="navbar"></header>>
 
   <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-grow-1 d-flex align-items-center py-5">
@@ -123,13 +76,13 @@
           <div class="card border-0 shadow-sm p-4 rounded-4">
             <h5 class="fw-bold mb-3">Redes sociales</h5>
             <div class="d-flex flex-wrap gap-2">
-              <a href="https://x.com/" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
+              <a href="https://x.com/luduss10?s=11" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
                   class="bi bi-twitter-x me-1"></i> X</a>
-              <a href="https://www.tiktok.com/" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
+              <a href="https://www.tiktok.com/@luduss4?_r=1&_t=ZS-9AJDpygjoUH" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
                   class="bi bi-tiktok me-1"></i> TikTok</a>
-              <a href="https://www.instagram.com/" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
+              <a href="https://www.instagram.com/ludus_real/" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
                   class="bi bi-instagram me-1"></i> Instagram</a>
-              <a href="https://www.facebook.com/" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
+              <a href="https://www.facebook.com/profile.php?id=61595166929606" target="_blank" class="btn btn-light btn-sm flex-fill text-nowrap"><i
                   class="bi bi-facebook me-1"></i> Facebook</a>
             </div>
           </div>
@@ -142,34 +95,37 @@
           <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
             <h5 class="fw-bold mb-4">Formulario de contacto</h5>
 
-            <form id="formularioContacto" class="d-flex flex-column h-100">
+            <form id="formularioContacto" class="d-flex flex-column h-100" novalidate>
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="nombre" class="form-label">Nombre *</label>
-                  <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej. Ernesto" required>
+                  <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej. Ernesto" >
+                  <div class="invalid-feedback" id="nombre-feedback"></div>
                 </div>
 
                 <div class="col-md-6 mb-3">
                   <label for="correo" class="form-label">Correo electrónico *</label>
-                  <input type="email" class="form-control" id="correo" name="correo" placeholder="tu@correo.com"
-                    required>
+                  <input type="email" class="form-control" id="correo" name="correo" placeholder="tu@correo.com">
+                  <div class="invalid-feedback" id="correo-feedback"></div>
                 </div>
               </div>
 
               <div class="mb-3">
                 <label for="asunto" class="form-label">Asunto *</label>
-                <select class="form-select" id="asunto" name="asunto" required>
+                <select class="form-select" id="asunto" name="asunto">
                   <option value="" disabled selected>Selecciona un asunto</option>
                   <option value="Sugerencia">Sugerencia</option>
                   <option value="Soporte">Soporte técnico</option>
                   <option value="Otro">Otro</option>
                 </select>
+                <div class="invalid-feedback" id="asunto-feedback"></div>
               </div>
 
               <div class="mb-3 flex-grow-1">
                 <label for="mensaje" class="form-label">Mensaje *</label>
                 <textarea class="form-control h-75" id="mensaje" name="mensaje" rows="5"
-                  placeholder="Escribe tu mensaje aquí..." required></textarea>
+                  placeholder="Escribe tu mensaje aquí..." ></textarea>
+                  <div class="invalid-feedback" id="mensaje-feedback"></div>
               </div>
 
               <button type="submit" class="btn btn-primary w-100 py-2 mt-auto">Enviar mensaje</button>
@@ -184,53 +140,7 @@
   </main>
 
   <!-- FOOTER -->
-  <footer class="bg-dark text-white pt-5 pb-3 mt-auto">
-    <div class="container">
-      <div class="row g-4">
-
-        <!-- Información del proyecto -->
-        <div class="col-12 col-md-5">
-          <h5 class="fw-bold">LUDUS</h5>
-          <p class="text-secondary">
-            Descubre nuevos videojuegos, comparte tus opiniones y conoce las reseñas de otros jugadores.
-          </p>
-        </div>
-
-        <!-- Navegación -->
-        <div class="col-12 col-md-3">
-          <h5 class="fw-bold">Navegación</h5>
-          <ul class="list-unstyled">
-            <li class="mb-2"><a href="./inicio.html" class="text-white text-decoration-none">Inicio</a></li>
-            <li class="mb-2"><a href="./inicio.html#juegosDestacadosl" class="text-white text-decoration-none">Juegos
-                destacados</a></li>
-            <li class="mb-2"><a href="./contactanos.html" class="text-decoration-none">Contáctanos</a></li>
-            <li><a href="./acercade.html" class="text-white text-decoration-none">Acerca de nosotros</a></li>
-          </ul>
-        </div>
-
-        <!-- Redes sociales -->
-        <div class="col-12 col-md-4">
-          <h5 class="fw-bold">Síguenos</h5>
-          <p class="text-secondary">Mantente al día con las novedades de nuestra comunidad.</p>
-          <div class="d-flex gap-3">
-            <a href="https://www.facebook.com/" class="text-white fs-4" target="_blank" rel="noopener noreferrer"><i
-                class="bi bi-facebook"></i></a>
-            <a href="https://www.instagram.com/" class="text-white fs-4" target="_blank" rel="noopener noreferrer"><i
-                class="bi bi-instagram"></i></a>
-            <a href="https://x.com/" class="text-white fs-4" target="_blank" rel="noopener noreferrer"><i
-                class="bi bi-twitter-x"></i></a>
-          </div>
-        </div>
-
-      </div>
-
-      <hr class="border-secondary my-4">
-
-      <div class="text-center text-secondary">
-        <small>© LUDUS. Todos los derechos reservados.</small>
-      </div>
-    </div>
-  </footer>
+  <section id="footer"></section>
 
   <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -241,6 +151,8 @@
   <script src="./JS/email.js"></script>
   <script src="./JS/header.js"></script>
   <script src="./JS/theme.js"></script>
+  <script src="./JS/footer.js"></script>
+  <script src="./JS/navbar.js"></script>
 </body>
 
 </html>
