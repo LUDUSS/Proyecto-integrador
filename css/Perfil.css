@@ -363,3 +363,62 @@ body {
         box-shadow: none;
     }
 }
+
+
+/*    botone editar                                      */
+/* Contenedor flotante para los botones de Editar y Eliminar */
+.tarjeta-acciones {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+}
+
+/* Estilos generales para los botones de acción en las tarjetas de las resenias de los juegos*/
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    background: var(--bs-body-bg);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Botón Editar */
+.btn-accion.editar {
+    color: var(--bs-primary);
+}
+
+.btn-accion.editar:hover {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: var(--bs-white);
+}
+
+.btn-accion.editar:focus-visible {
+    outline: 3px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+/* Botón Eliminar (Se quita el absolute para que respete el contenedor dle flex) */
+.btn-accion.eliminar {
+    position: static; 
+    color: var(--bs-danger);
+}
+
+.btn-accion.eliminar:hover {
+    background: var(--bs-danger);
+    border-color: var(--bs-danger);
+    color: var(--bs-white);
+}
+
+.btn-accion.eliminar:focus-visible {
+    outline: 3px solid var(--bs-danger);
+    outline-offset: 2px;
+}
