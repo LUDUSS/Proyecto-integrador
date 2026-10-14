@@ -24,3 +24,23 @@ $(function() {
 	
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+    const menuLateralElement = document.getElementById('menuLateral');
+    
+    // Verificamos si Bootstrap y el offcanvas están disponibles
+    if (menuLateralElement && typeof bootstrap !== 'undefined') {
+        const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(menuLateralElement);
+
+        // Seleccionar todos los enlaces dentro del menú lateral
+        const navLinks = menuLateralElement.querySelectorAll('.nav-link');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                // Solo cerramos el offcanvas si estamos en vista de dispositivo móvil (pantallas menores a 768px)
+                if (window.innerWidth < 768) {
+                    bsOffcanvas.hide();
+                }
+            });
+        });
+    }
+});
