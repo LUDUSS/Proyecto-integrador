@@ -34,22 +34,35 @@
     <!-- Contenido principal -->
     <main class="perfil-layout container-fluid">
 
-        <!-- Menú lateral -->
-        <aside class="perfil-sidebar card">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Inicio</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Reseñas</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="#">Perfil</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Configuración</a>
-                </li>
-            </ul>
+ <!-- Botón para mostrar el menú lateral en dispositivos móviles -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral">
+                <i class="bi bi-list"></i> Menú
+            </button>
+        </div>
+
+        <!-- Menú lateral adaptado con Bootstrap Offcanvas (oculto en móviles, fijo de md en adelante) -->
+        <aside id="menuLateral" class="perfil-sidebar card offcanvas-md offcanvas-start" tabindex="-1" aria-labelledby="menuLateralLabel">
+            <div class="offcanvas-header d-md-none">
+                <h5 class="offcanvas-title" id="menuLateralLabel">Menú</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#menuLateral" aria-label="Cerrar"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <ul class="nav flex-column w-100">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Reseñas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Perfil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Configuración</a>
+                    </li>
+                </ul>
+            </div>
         </aside>
 
         <!-- Contenido de videojuegos -->

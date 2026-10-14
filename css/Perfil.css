@@ -294,7 +294,12 @@ body {
     cursor: pointer;
 }
 
-/* Menú lateral */
+/* Menú lateral (Estilos base) */
+.perfil-sidebar {
+    padding: 16px 8px;
+    background: var(--bs-body-bg);
+}
+
 .perfil-sidebar .nav-link {
     color: var(--bs-body-color);
 }
@@ -307,16 +312,12 @@ body {
         padding: 16px;
     }
 
+    /* En móviles dejamos que el offcanvas controle su propio ancho y posición */
     .perfil-sidebar {
-        flex: auto;
         width: 100%;
     }
 
-    .perfil-sidebar .nav {
-        flex-direction: row !important;
-        flex-wrap: wrap;
-    }
-
+    /* Mantenemos tus ajustes responsivos para las tarjetas y contenido */
     .perfil-content {
         width: 100%;
     }
@@ -338,5 +339,17 @@ body {
     .tarjeta-juego__cuerpo {
         gap: 20px;
         padding: 20px;
+    }
+}
+
+/* Regla clave para escritorio: de 768px en adelante, el offcanvas se convierte en una columna estática normal */
+@media (min-width: 768px) {
+    .offcanvas-md.perfil-sidebar {
+        position: static !important;
+        transform: none !important;
+        visibility: visible !important;
+        flex: 0 0 220px;
+        border: 1px solid var(--bs-border-color); /* Opcional si usas los bordes de tus cards */
+        box-shadow: none;
     }
 }
