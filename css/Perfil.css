@@ -124,6 +124,16 @@ body {
 	opacity: 1;
 }
 
+.tarjeta-juego__calificacion .stars,
+.tarjeta-juego__calificacion .rate {
+	cursor: default;
+	pointer-events: none;
+}
+
+.tarjeta-juego__calificacion .rate:hover .face {
+	opacity: 0;
+}
+
 /* Not sure if I like this or not. */
 /* Makes the emoji stay displayed */
 /* input[type="radio"]:checked + .face {

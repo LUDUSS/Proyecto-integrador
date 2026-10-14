@@ -227,7 +227,7 @@
         deleteButton.className = 'btn-accion eliminar';
         deleteButton.title = 'Eliminar tarea';
         deleteButton.setAttribute('aria-label', 'Eliminar tarea');
-    // Agrega el ícono de basura al botón y añade el botón al artículo.
+    // Agrega el ícono de basura al botón y añade el botón a la card.
         const deleteIcon = document.createElement('i');
         deleteIcon.className = 'bi bi-trash';
         deleteIcon.setAttribute('aria-hidden', 'true');
@@ -280,7 +280,7 @@
 
         const ratingTitle = document.createElement('h6');
         ratingTitle.className = 'card-title';
-        ratingTitle.textContent = 'Califica tu experiencia';
+        ratingTitle.textContent = 'Tu calificación';
 
         const ratingDescription = document.createElement('p');
         ratingDescription.className = 'card-text';
@@ -307,6 +307,7 @@
             input.name = ratingName;
             input.value = String(value);
             input.checked = value === rating;
+            input.disabled = true;
 
             const face = document.createElement('div');
             face.className = 'face';
