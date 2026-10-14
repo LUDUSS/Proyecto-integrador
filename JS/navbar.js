@@ -23,10 +23,10 @@ navbar.innerHTML=`
         <!-- Menú Centrado con separación idéntica (gap-3) -->
         <ul class="navbar-nav mx-auto align-items-center gap-3 mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" href="./inicio.html">Inicio</a>
+            <a class="nav-link" href="./index.html">Inicio</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-nowrap" href="./inicio.html#juegosDestacados">Juegos Destacados</a>
+            <a class="nav-link text-nowrap" href="./index.html#juegosDestacados">Juegos Destacados</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="./contactanos.html">Contáctanos</a>

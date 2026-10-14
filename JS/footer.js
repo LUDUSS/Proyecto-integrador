@@ -17,7 +17,7 @@ footerContainer.innerHTML = `
         <div class="col-12 col-md-3">
           <h5 class="fw-bold">Navegación</h5>
           <ul class="list-unstyled">
-            <li class="mb-2"><a href="inicio.html" class="text-white text-decoration-none">Inicio</a></li>
+            <li class="mb-2"><a href="index.html" class="text-white text-decoration-none">Inicio</a></li>
             <li class="mb-2"><a href="#juegosDestacados" class="text-white text-decoration-none">Juegos destacados</a></li>
             <li class="mb-2"><a href="./contactanos.html" class="text-white text-decoration-none">Contáctanos</a></li>
             <li><a href="acercade.html" class="text-white text-decoration-none">Acerca de nosotros</a></li>
