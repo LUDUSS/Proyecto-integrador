@@ -1,18 +1,46 @@
 (() => {
+    // Clave que identifica las reseñas guardadas y eliminadas en el almacenamiento del navegador.
     const STORAGE_KEY = 'resenias-videojuegos';
     const INITIAL_GAME_REMOVED_KEY = 'juego-inicial-eliminado';
-
+    // Busca los elementos de la página que utiliza esta funcionalidad.
     const button = document.getElementById('mostrar-formulario-resenia');
     const form = document.getElementById('formulario-resenia');
-    const cancelButton = document.getElementById('cancelar-resenia');
+    const modalElement = document.getElementById('modal-resenia');
     const reviewsList = document.getElementById('lista-resenias');
-
-    if (!button || !form || !cancelButton || !reviewsList) {
+    const modalTitle = document.getElementById('modal-resenia-titulo');
+    const imageInput = document.getElementById('imagen-juego');
+    const imagePreview = document.getElementById('imagen-juego-preview');
+    const imageCrop = document.getElementById('imagen-juego-encuadre');
+    const imageHelp = document.getElementById('imagen-juego-ayuda');
+    const nameInput = document.getElementById('nombre-juego');
+    const reviewInput = document.getElementById('texto-resenia');
+    const ratingInputs = form
+        ? Array.from(form.querySelectorAll('input[name="calificacion-nueva"]'))
+        : [];
+    const nameFeedback = document.getElementById('nombre-juego-feedback');
+    const reviewFeedback = document.getElementById('texto-resenia-feedback');
+    const imageFeedback = document.getElementById('imagen-juego-feedback');
+    const ratingFeedback = document.getElementById('calificacion-feedback');
+    // Detiene la inicialización y avisa si falta alguna parte necesaria del HTML.
+    if (!button || !form || !modalElement || !modalTitle || !reviewsList
+        || !imageInput || !imagePreview || !imageCrop || !imageHelp
+        || !nameInput || !reviewInput || !nameFeedback || !reviewFeedback || !imageFeedback
+        || !ratingFeedback || ratingInputs.length === 0) {
         throw new Error('No se encontraron los elementos necesarios para agregar reseñas.');
     }
 
+    const reviewModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (!submitButton) {
+        throw new Error('No se encontró el botón para guardar la reseña.');
+    }
+
+    // Recupera las reseñas previas; si los datos no se pueden leer, evita permitir
+    // nuevos registros para no reemplazar accidentalmente información guardada.
     let savedReviews;
     let editingIndex = null; // Variable para controlar si estamos editando una reseña
+    let imagePosition = { x: 50, y: 50 };
+    let previewObjectUrl = null;
 
     try {
         savedReviews = loadReviews();
@@ -50,46 +78,87 @@
         const deleteButton = event.target.closest('.btn-accion.eliminar');
         const editButton = event.target.closest('.btn-accion.editar');
         const card = event.target.closest('.tarjeta-juego');
-        
+
         if (!card) {
             return;
         }
 
         // ACCIÓN: ELIMINAR
         if (deleteButton) {
-            const gameName = card.querySelector('.card-title')?.textContent.trim() || 'este juego';
-            if (!window.confirm(`¿Eliminar la tarjeta de ${gameName}?`)) {
-                return;
-            }
+            const gameName =
+                card.querySelector('.card-title')?.textContent.trim() || 'este juego';
 
-            if (card.hasAttribute('data-juego-inicial')) {
-                try {
-                    localStorage.setItem(INITIAL_GAME_REMOVED_KEY, 'true');
-                } catch (error) {
-                    console.error('No se pudo guardar la eliminación de la tarjeta.', error);
-                    alert('No se pudo eliminar la tarjeta. Revisa el almacenamiento del navegador.');
+            Swal.fire({
+                title: "Eliminar",
+                text: `¿Estás seguro que quieres eliminar ${gameName}?`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Sí, eliminar",
+                cancelButtonText: "Cancelar",
+                reverseButtons: true
+            }).then((result) => {
+
+                // Solo eliminar si el usuario confirma
+                if (!result.isConfirmed) {
                     return;
                 }
-                card.remove();
-                return;
-            }
 
-            const reviewIndex = Number(card.dataset.reviewIndex);
-            if (!Number.isInteger(reviewIndex) || reviewIndex < 0 || reviewIndex >= savedReviews.length) {
-                console.error('No se pudo identificar la reseña que se intentó eliminar.');
-                alert('No se pudo eliminar la reseña. Recarga la página e inténtalo de nuevo.');
-                return;
-            }
+                if (card.hasAttribute('data-juego-inicial')) {
+                    try {
+                        localStorage.setItem(INITIAL_GAME_REMOVED_KEY, 'true');
+                    } catch (error) {
+                        console.error(
+                            'No se pudo guardar la eliminación de la tarjeta.',
+                            error
+                        );
 
-            const updatedReviews = savedReviews.filter((_, index) => index !== reviewIndex);
-            if (!saveReviews(updatedReviews)) {
-                return;
-            }
+                        Swal.fire({
+                            title: "Error",
+                            text: "No se pudo eliminar la tarjeta. Revisa el almacenamiento del navegador.",
+                            icon: "error"
+                        });
 
-            renderReviews();
+                        return;
+                    }
+
+                    card.remove();
+                    return;
+                }
+
+                const reviewIndex = Number(card.dataset.reviewIndex);
+
+                if (
+                    !Number.isInteger(reviewIndex) ||
+                    reviewIndex < 0 ||
+                    reviewIndex >= savedReviews.length
+                ) {
+                    console.error(
+                        'No se pudo identificar la reseña que se intentó eliminar.'
+                    );
+
+                    Swal.fire({
+                        title: "Error",
+                        text: "No se pudo eliminar la reseña. Recarga la página e inténtalo de nuevo.",
+                        icon: "error"
+                    });
+
+                    return;
+                }
+
+                const updatedReviews = savedReviews.filter(
+                    (_, index) => index !== reviewIndex
+                );
+
+                if (!saveReviews(updatedReviews)) {
+                    return;
+                }
+
+                renderReviews();
+                return;
+            });
+
             return;
         }
-
         // ACCIÓN: EDITAR
         if (editButton) {
             if (card.hasAttribute('data-juego-inicial')) {
@@ -105,7 +174,14 @@
             // Cargar datos en el formulario
             form.querySelector('#nombre-juego').value = reviewToEdit.gameName;
             form.querySelector('#texto-resenia').value = reviewToEdit.reviewText;
-            
+            imageInput.value = '';
+            imageInput.required = false;
+            imagePreview.src = reviewToEdit.imageSource;
+            imagePosition = getImagePosition(reviewToEdit.imagePosition);
+            updateImagePosition();
+            imageCrop.hidden = false;
+            imageHelp.hidden = false;
+
             // Marcar la estrella correspondiente
             const ratingInput = form.querySelector(`input[name="calificacion-nueva"][value="${reviewToEdit.rating}"]`);
             if (ratingInput) {
@@ -113,39 +189,188 @@
             }
 
             editingIndex = reviewIndex; // Guardamos el índice que estamos editando
-            form.hidden = false;
-            button.setAttribute('aria-expanded', 'true');
-            form.querySelector('#nombre-juego').focus();
-            
-            // Desplazar suavemente hacia el formulario
-            form.scrollIntoView({ behavior: 'smooth' });
+            modalTitle.textContent = 'Editar reseña';
+            submitButton.textContent = 'Guardar cambios';
+            reviewModal.show(editButton);
         }
+    });
+
+    // Actualiza el encuadre mostrado en la vista previa con porcentajes persistibles.
+    function updateImagePosition() {
+        imagePreview.style.objectPosition = `${imagePosition.x}% ${imagePosition.y}%`;
+    }
+
+    // Los datos anteriores que no tenían encuadre usan el centro de la imagen.
+    function getImagePosition(position) {
+        if (
+            position &&
+            Number.isFinite(position.x) &&
+            Number.isFinite(position.y) &&
+            position.x >= 0 &&
+            position.x <= 100 &&
+            position.y >= 0 &&
+            position.y <= 100
+        ) {
+            return { x: position.x, y: position.y };
+        }
+        return { x: 50, y: 50 };
+    }
+
+    // Libera la URL temporal que se usa para mostrar una imagen recién seleccionada.
+    function clearPreviewObjectUrl() {
+        if (previewObjectUrl) {
+            URL.revokeObjectURL(previewObjectUrl);
+            previewObjectUrl = null;
+        }
+    }
+
+    // Al cambiar de archivo, carga su vista previa y comienza con el encuadre centrado.
+    imageInput.addEventListener('change', () => {
+        const imageFile = imageInput.files[0];
+        if (!imageFile) {
+            return;
+        }
+
+        clearPreviewObjectUrl();
+        if (!imageFile.type.startsWith('image/')) {
+            imageCrop.hidden = true;
+            imageHelp.hidden = true;
+            imagePreview.removeAttribute('src');
+            return;
+        }
+
+        previewObjectUrl = URL.createObjectURL(imageFile);
+        imagePreview.src = previewObjectUrl;
+        imagePosition = { x: 50, y: 50 };
+        updateImagePosition();
+        imageCrop.hidden = false;
+        imageHelp.hidden = false;
+    });
+
+    // Permite arrastrar el recorte con mouse, lápiz o pantalla táctil.
+    let activeDrag = null;
+    imageCrop.addEventListener('pointerdown', (event) => {
+        if (!event.isPrimary || imagePreview.naturalWidth === 0) {
+            return;
+        }
+
+        const bounds = imageCrop.getBoundingClientRect();
+        const scale = Math.max(
+            bounds.width / imagePreview.naturalWidth,
+            bounds.height / imagePreview.naturalHeight
+        );
+
+        activeDrag = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            startPosition: { ...imagePosition },
+            overflowX: Math.max(0, imagePreview.naturalWidth * scale - bounds.width),
+            overflowY: Math.max(0, imagePreview.naturalHeight * scale - bounds.height)
+        };
+        imageCrop.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    });
+
+    imageCrop.addEventListener('pointermove', (event) => {
+        if (!activeDrag || activeDrag.pointerId !== event.pointerId) {
+            return;
+        }
+
+        imagePosition = {
+            x: activeDrag.overflowX
+                ? clampPosition(
+                    activeDrag.startPosition.x
+                        - ((event.clientX - activeDrag.startX) / activeDrag.overflowX) * 100
+                )
+                : activeDrag.startPosition.x,
+            y: activeDrag.overflowY
+                ? clampPosition(
+                    activeDrag.startPosition.y
+                        - ((event.clientY - activeDrag.startY) / activeDrag.overflowY) * 100
+                )
+                : activeDrag.startPosition.y
+        };
+        updateImagePosition();
+    });
+
+    function clampPosition(position) {
+        return Math.min(100, Math.max(0, position));
+    }
+
+    function finishImageDrag(event) {
+        if (activeDrag?.pointerId === event.pointerId) {
+            activeDrag = null;
+        }
+    }
+
+    imageCrop.addEventListener('pointerup', finishImageDrag);
+    imageCrop.addEventListener('pointercancel', finishImageDrag);
+    imageCrop.addEventListener('lostpointercapture', finishImageDrag);
+
+    // Las flechas permiten ajustar el encuadre sin arrastrar con el puntero.
+    imageCrop.addEventListener('keydown', (event) => {
+        const step = event.shiftKey ? 10 : 2;
+        const direction = {
+            ArrowLeft: { x: step, y: 0 },
+            ArrowRight: { x: -step, y: 0 },
+            ArrowUp: { x: 0, y: step },
+            ArrowDown: { x: 0, y: -step }
+        }[event.key];
+
+        if (!direction) {
+            return;
+        }
+
+        event.preventDefault();
+        imagePosition = {
+            x: clampPosition(imagePosition.x + direction.x),
+            y: clampPosition(imagePosition.y + direction.y)
+        };
+        updateImagePosition();
     });
 
     function resetForm() {
         form.reset();
-        editingIndex = null; // Limpiamos el estado de edición
+        clearPreviewObjectUrl();
+        imageInput.required = true;
+        imagePreview.removeAttribute('src');
+        imageCrop.hidden = true;
+        imageHelp.hidden = true;
+        imagePosition = { x: 50, y: 50 };
+        activeDrag = null;
+        // Al reiniciar el formulario, dejamos de editar una reseña existente.
+        editingIndex = null;
+        // Quitamos los estilos Bootstrap que indican campos válidos o inválidos.
+        [nameInput, reviewInput, imageInput, ...ratingInputs].forEach((input) => {
+            input.classList.remove('is-invalid', 'is-valid');
+        });
+        // Borramos los mensajes de validación y ocultamos sus contenedores.
+        [nameFeedback, reviewFeedback, imageFeedback, ratingFeedback].forEach((feedback) => {
+            feedback.textContent = '';
+            feedback.classList.remove('d-block');
+        });
         form.querySelectorAll('.rate .star').forEach((star) => {
             star.classList.remove('fas', 'rate-active', 'star-over');
             star.classList.add('far');
         });
     }
 
-    button.addEventListener('click', () => {
-        form.hidden = !form.hidden;
-        button.setAttribute('aria-expanded', String(!form.hidden));
-        if (!form.hidden) {
-            editingIndex = null; // Asegurar modo creación si se abre desde el botón principal
-            form.reset();
-            form.querySelector('#nombre-juego').focus();
-        }
+    modalElement.addEventListener('show.bs.modal', () => {
+        button.setAttribute('aria-expanded', 'true');
     });
 
-    cancelButton.addEventListener('click', () => {
+    modalElement.addEventListener('hidden.bs.modal', () => {
         resetForm();
-        form.hidden = true;
+        modalTitle.textContent = 'Escribe una reseña';
+        submitButton.textContent = 'Publicar reseña';
         button.setAttribute('aria-expanded', 'false');
-        button.focus();
+    });
+
+    button.addEventListener('click', () => {
+        resetForm();
+        reviewModal.show(button);
+        modalElement.addEventListener('shown.bs.modal', () => nameInput.focus(), { once: true });
     });
 
     // Procesa el formulario (Crear o Actualizar)
@@ -154,11 +379,63 @@
 
         const gameName = form.querySelector('#nombre-juego').value.trim();
         const reviewText = form.querySelector('#texto-resenia').value.trim();
-        const imageFile = form.querySelector('#imagen-juego').files[0];
+        const imageFile = imageInput.files[0];
         const ratingInput = form.querySelector('input[name="calificacion-nueva"]:checked');
+        let isValid = true;
 
-        if (!gameName || !reviewText || !ratingInput) {
-            alert('Por favor, completa los campos obligatorios y selecciona una calificación.');
+        [nameInput, reviewInput, imageInput, ...ratingInputs].forEach((input) => {
+            input.classList.remove('is-invalid', 'is-valid');
+        });
+        [nameFeedback, reviewFeedback, imageFeedback, ratingFeedback].forEach((feedback) => {
+            feedback.textContent = '';
+            feedback.classList.remove('d-block');
+        });
+
+        if (gameName.length < 3 || gameName.length > 50) {
+            nameFeedback.textContent = gameName
+                ? (gameName.length < 3
+                    ? 'El nombre del videojuego es muy corto (mínimo 3 caracteres).'
+                    : 'El nombre del videojuego no puede superar los 100 caracteres.')
+                : 'El nombre del videojuego no puede estar vacío.';
+            nameInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            nameInput.classList.add('is-valid');
+        }
+
+        if (!reviewText || reviewText.length > 1000) {
+            reviewFeedback.textContent = reviewText
+                ? 'La reseña no puede superar los 1000 caracteres.'
+                : 'El campo reseña no puede estar vacío.';
+            reviewInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            reviewInput.classList.add('is-valid');
+        }
+
+        if (!imageFile && editingIndex === null) {
+            imageFeedback.textContent = 'Selecciona una imagen para la portada del videojuego.';
+            imageInput.classList.add('is-invalid');
+            isValid = false;
+        } else if (imageFile && !imageFile.type.startsWith('image/')) {
+            imageFeedback.textContent = 'Selecciona un archivo de imagen válido.';
+            imageInput.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            imageInput.classList.add('is-valid');
+        }
+
+        if (!ratingInput) {
+            ratingFeedback.textContent = 'Selecciona una calificación.';
+            ratingFeedback.classList.add('d-block');
+            ratingInputs[0].classList.add('is-invalid');
+            isValid = false;
+        } else {
+            ratingInput.classList.add('is-valid');
+        }
+
+        if (!isValid) {
+            form.querySelector('.is-invalid')?.focus();
             return;
         }
 
@@ -170,6 +447,7 @@
                 gameName,
                 reviewText,
                 imageSource: savedReviews[editingIndex].imageSource,
+                imagePosition: { ...imagePosition },
                 rating
             };
 
@@ -177,24 +455,11 @@
             if (!saveReviews(savedReviews)) return;
 
             renderReviews();
-            resetForm();
-            form.hidden = true;
-            button.setAttribute('aria-expanded', 'false');
-            button.focus();
+            reviewModal.hide();
             return;
         }
 
         // Si es creación o se seleccionó una nueva imagen
-        if (!imageFile) {
-            alert('Selecciona un archivo de imagen para la portada del videojuego.');
-            return;
-        }
-
-        if (!imageFile.type.startsWith('image/')) {
-            alert('Selecciona un archivo de imagen válido.');
-            return;
-        }
-
         const reader = new FileReader();
         reader.addEventListener('load', () => {
             if (typeof reader.result !== 'string') {
@@ -206,6 +471,7 @@
                 gameName,
                 reviewText,
                 imageSource: reader.result,
+                imagePosition: { ...imagePosition },
                 rating
             };
 
@@ -222,10 +488,7 @@
             }
 
             renderReviews();
-            resetForm();
-            form.hidden = true;
-            button.setAttribute('aria-expanded', 'false');
-            button.focus();
+            reviewModal.hide();
         });
 
         reader.addEventListener('error', () => {
@@ -255,7 +518,20 @@
             && review.imageSource.startsWith('data:image/')
             && Number.isInteger(review.rating)
             && review.rating >= 1
-            && review.rating <= 5;
+            && review.rating <= 5
+            && (
+                review.imagePosition === undefined
+                || (
+                    review.imagePosition !== null
+                    && typeof review.imagePosition === 'object'
+                    && Number.isFinite(review.imagePosition.x)
+                    && review.imagePosition.x >= 0
+                    && review.imagePosition.x <= 100
+                    && Number.isFinite(review.imagePosition.y)
+                    && review.imagePosition.y >= 0
+                    && review.imagePosition.y <= 100
+                )
+            );
     }
 
     function saveReviews(updatedReviews) {
@@ -270,7 +546,10 @@
         return true;
     }
 
-    function createReviewCard({ gameName, reviewText, imageSource, rating }, reviewIndex) {
+    function createReviewCard(
+        { gameName, reviewText, imageSource, imagePosition: savedImagePosition, rating },
+        reviewIndex
+    ) {
         const article = document.createElement('article');
         article.className = 'card tarjeta-juego';
         article.dataset.reviewIndex = String(reviewIndex);
@@ -312,10 +591,12 @@
         const image = document.createElement('img');
         image.src = imageSource;
         image.alt = `Portada de ${gameName}`;
+        const cardImagePosition = getImagePosition(savedImagePosition);
+        image.style.objectPosition = `${cardImagePosition.x}% ${cardImagePosition.y}%`;
         imageColumn.appendChild(image);
 
         const contentColumn = document.createElement('div');
-        contentColumn.className = 'col-md-8 tarjeta-juego__contenido';
+        contentColumn.className = 'col-md-12 tarjeta-juego__contenido';
 
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body tarjeta-juego__cuerpo';
