@@ -170,16 +170,44 @@ body {
     color: var(--bs-body-color);
 }
 
-/* Asegura que el formulario oculto no reserve espacio en la página. */
-.formulario-resenia[hidden] {
-    display: none;
+/* Mantiene el color del formulario legible en ambos temas. */
+.formulario-resenia {
+    color: var(--bs-body-color);
 }
 
-/* Da al formulario el ancho de las tarjetas y separa sus controles del listado. */
-.formulario-resenia {
-    max-width: 950px;
-    margin-bottom: 16px;
-    color: var(--bs-body-color);
+/* Marco fijo para arrastrar la imagen sin alterar el archivo original. */
+.imagen-encuadre {
+    width: min(100%, 420px);
+    height: 220px;
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    background: var(--bs-tertiary-bg);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.imagen-encuadre:active {
+    cursor: grabbing;
+}
+
+.imagen-encuadre:focus-visible {
+    outline: 3px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+.imagen-encuadre img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.imagen-encuadre[hidden],
+#imagen-juego-ayuda[hidden] {
+    display: none;
 }
 
 /* Apila las tarjetas de reseña y deja una separación entre ellas. */
@@ -192,7 +220,7 @@ body {
 /* Tarjeta del videojuego */
 .tarjeta-juego {
     width: 100%;
-    max-width: 950px;
+    max-width: 1000px;
     background: var(--bs-body-bg);
     color: var(--bs-body-color);
     border: 1px solid var(--bs-border-color);
@@ -202,7 +230,7 @@ body {
 }
 
 .btn-accion.eliminar {
-    position: absolute;
+    position: static;
     top: 12px;
     right: 12px;
     z-index: 1;
@@ -235,8 +263,11 @@ body {
 }
 
 /* Imagen: ocupa toda la altura de la tarjeta */
+
 .tarjeta-juego__imagen {
-    min-height: 320px;
+    width: 1000px;
+    height: 450px;
+   
 }
 
 .tarjeta-juego__imagen img {
@@ -252,6 +283,7 @@ body {
 .tarjeta-juego__contenido {
     display: flex;
     min-width: 0;
+    text-align: justify;
 }
 
 .tarjeta-juego__cuerpo {
@@ -265,6 +297,8 @@ body {
 /* Descripción */
 .tarjeta-juego__descripcion .card-title {
     margin-bottom: 16px;
+    display: flex;
+    justify-content:space-between;
 }
 
 /* Calificación debajo de la descripción */
@@ -403,22 +437,5 @@ body {
 
 .btn-accion.editar:focus-visible {
     outline: 3px solid var(--bs-primary);
-    outline-offset: 2px;
-}
-
-/* Botón Eliminar (Se quita el absolute para que respete el contenedor dle flex) */
-.btn-accion.eliminar {
-    position: static; 
-    color: var(--bs-danger);
-}
-
-.btn-accion.eliminar:hover {
-    background: var(--bs-danger);
-    border-color: var(--bs-danger);
-    color: var(--bs-white);
-}
-
-.btn-accion.eliminar:focus-visible {
-    outline: 3px solid var(--bs-danger);
     outline-offset: 2px;
 }
