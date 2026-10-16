@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reseñas de la comunidad</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/inicio.css">
+    <link rel="stylesheet" href="./css/acercade.css">
+    <link rel="stylesheet" href="./css/Perfil.css">
+</head>
+
+<body>
+
+    <!-- Barra de navegación -->
+    <header id="navbar"></header>
+
+    <!-- Contenido principal -->
+    <main class="perfil-layout container-fluid">
+
+ <!-- Botón para mostrar el menú lateral en dispositivos móviles -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral">
+                <i class="bi bi-list"></i> Menú
+            </button>
+        </div>
+
+        <!-- Menú lateral adaptado con Bootstrap Offcanvas (oculto en móviles, fijo de md en adelante) -->
+        <aside id="menuLateral" class="perfil-sidebar card offcanvas-md offcanvas-start" tabindex="-1" aria-labelledby="menuLateralLabel">
+            <div class="offcanvas-header d-md-none">
+                <h5 class="offcanvas-title" id="menuLateralLabel">Menú</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#menuLateral" aria-label="Cerrar"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <ul class="nav flex-column w-100">
+                    <li class="nav-item">
+                        <a class="nav-link" href="./index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="./resenias.html">Reseñas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="./perfil.html">Perfil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Configuración</a> 
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Contenido de reseñas -->
+        <section class="perfil-content">
+
+             <h1 class="h3 mb-4">Reseñas de la comunidad</h1>
+
+            <!-- Aquí JavaScript insertará las tarjetas -->
+            <div id="lista-resenas-comunidad" class="lista-resenias">
+                <!-- Se llena desde reseniasComunidad.js -->
+            </div> 
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer"></footer>
+
+    <!-- Bootstrap -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Scripts personalizados -->
+    <script src="./JS/header.js"></script>
+    <script src="./JS/theme.js"></script>
+    <script src="./JS/footer.js"></script>
+    <script src="./JS/navbar.js"></script>
+    <script src="./JS/Perfil.js"></script>
+   <!-- carga la lista de reseñas de la comunidad -->
+    <script src="./JS/reseniasComunidad.js"></script>
+
+</body>
+</html>

@@ -34,6 +34,9 @@ navbar.innerHTML=`
           <li class="nav-item">
             <a class="nav-link" href="./acercade.html">Acerca de nosotros</a>
           </li>
+              <li class="nav-item">
+        <a class="nav-link" href="./resenias.html">Reseñas</a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="./perfil.html">Mi perfil</a>
           </li>
