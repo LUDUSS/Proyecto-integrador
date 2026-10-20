@@ -48,6 +48,7 @@ function cargarJuegosDestacados() {
           <div class="p-2">
             <img src="${srcImagen}" class="card-img-top rounded-3" 
                  alt="${juego.nombre}"
+                 loading="lazy"
                  style="height: 220px; object-fit: cover; background-color: #e2e2e2;">
           </div>
           <div class="card-body pt-1 pb-3 px-3 d-flex flex-column justify-content-end">
