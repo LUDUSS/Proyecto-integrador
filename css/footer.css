@@ -1,0 +1,24 @@
+.footer-responsive {
+    display: flex;
+    justify-content: space-around;
+    /* Distribuye el contenido horizontalmente */
+    align-items: flex-start;
+    padding: 20px;
+    background-color: #222;
+    color: #fff;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .footer-responsive {
+        flex-direction: column;
+        /* Cambia de fila a columna */
+        align-items: center;
+        /* Centra los bloques horizontalmente */
+        text-align: center;
+    }
+
+    .footer-section {
+        justify-content: center;
+    }
+}
