@@ -124,6 +124,16 @@ body {
 	opacity: 1;
 }
 
+.tarjeta-juego__calificacion .stars,
+.tarjeta-juego__calificacion .rate {
+	cursor: default;
+	pointer-events: none;
+}
+
+.tarjeta-juego__calificacion .rate:hover .face {
+	opacity: 0;
+}
+
 /* Not sure if I like this or not. */
 /* Makes the emoji stay displayed */
 /* input[type="radio"]:checked + .face {
@@ -160,16 +170,44 @@ body {
     color: var(--bs-body-color);
 }
 
-/* Asegura que el formulario oculto no reserve espacio en la página. */
-.formulario-resenia[hidden] {
-    display: none;
+/* Mantiene el color del formulario legible en ambos temas. */
+.formulario-resenia {
+    color: var(--bs-body-color);
 }
 
-/* Da al formulario el ancho de las tarjetas y separa sus controles del listado. */
-.formulario-resenia {
-    max-width: 950px;
-    margin-bottom: 16px;
-    color: var(--bs-body-color);
+/* Marco fijo para arrastrar la imagen sin alterar el archivo original. */
+.imagen-encuadre {
+    width: min(100%, 420px);
+    height: 220px;
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    background: var(--bs-tertiary-bg);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.imagen-encuadre:active {
+    cursor: grabbing;
+}
+
+.imagen-encuadre:focus-visible {
+    outline: 3px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+.imagen-encuadre img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.imagen-encuadre[hidden],
+#imagen-juego-ayuda[hidden] {
+    display: none;
 }
 
 /* Apila las tarjetas de reseña y deja una separación entre ellas. */
@@ -182,7 +220,7 @@ body {
 /* Tarjeta del videojuego */
 .tarjeta-juego {
     width: 100%;
-    max-width: 950px;
+    max-width: 1000px;
     background: var(--bs-body-bg);
     color: var(--bs-body-color);
     border: 1px solid var(--bs-border-color);
@@ -192,7 +230,7 @@ body {
 }
 
 .btn-accion.eliminar {
-    position: absolute;
+    position: static;
     top: 12px;
     right: 12px;
     z-index: 1;
@@ -225,8 +263,11 @@ body {
 }
 
 /* Imagen: ocupa toda la altura de la tarjeta */
+
 .tarjeta-juego__imagen {
-    min-height: 320px;
+    width: 1000px;
+    height: 450px;
+   
 }
 
 .tarjeta-juego__imagen img {
@@ -242,6 +283,7 @@ body {
 .tarjeta-juego__contenido {
     display: flex;
     min-width: 0;
+    text-align: justify;
 }
 
 .tarjeta-juego__cuerpo {
@@ -255,6 +297,8 @@ body {
 /* Descripción */
 .tarjeta-juego__descripcion .card-title {
     margin-bottom: 16px;
+    display: flex;
+    justify-content:space-between;
 }
 
 /* Calificación debajo de la descripción */
@@ -352,4 +396,46 @@ body {
         border: 1px solid var(--bs-border-color); /* Opcional si usas los bordes de tus cards */
         box-shadow: none;
     }
+}
+
+
+/*    botone editar                                      */
+/* Contenedor flotante para los botones de Editar y Eliminar */
+.tarjeta-acciones {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+}
+
+/* Estilos generales para los botones de acción en las tarjetas de las resenias de los juegos*/
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    background: var(--bs-body-bg);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Botón Editar */
+.btn-accion.editar {
+    color: var(--bs-primary);
+}
+
+.btn-accion.editar:hover {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: var(--bs-white);
+}
+
+.btn-accion.editar:focus-visible {
+    outline: 3px solid var(--bs-primary);
+    outline-offset: 2px;
 }

@@ -9,10 +9,10 @@ $(function() {
 			$(this).find('.far').removeClass('star-over');
 			$(this).prevAll().find('.far').removeClass('star-over');
 		}
-	}, '.rate');
+	}, '#formulario-resenia .rate');
 
-
-	$(document).on('click', '.rate', function() {
+  // #formulario-resenias ayudaa que solo se puede modificar en el formulariuo de creación y no después de crearla
+	$(document).on('click', '#formulario-resenia .rate', function() {
 		if ( !$(this).find('.star').hasClass('rate-active') ) {
 			$(this).siblings().find('.star').addClass('far').removeClass('fas rate-active');
 			$(this).find('.star').addClass('rate-active fas').removeClass('far star-over');
