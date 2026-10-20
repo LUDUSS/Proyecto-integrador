@@ -28,21 +28,53 @@ function isLoggedIn() {
   return getCurrentUser() !== null;
 }
 
-function registerUser({ name, email, password }) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const users = getUsers();
+function registerUser({ name, email, password, telefono }) {
 
-  if (users.some((user) => user.email === normalizedEmail)) {
-    throw new Error("Ya existe una cuenta registrada con ese correo.");
-  }
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = name.trim();
+    const normalizedTelefono = telefono.trim();
 
-  users.push({
-    name: name.trim(),
-    email: normalizedEmail,
-    password
-  });
+    const users = getUsers();
 
-  localStorage.setItem(LUDUS_USERS_KEY, JSON.stringify(users));
+    const regexNombre = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]{3,60}$/;
+    const regexTelefono = /^[0-9]{10}$/;
+    const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const regexPassword = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*?_-]).{8,}$/;
+
+    // Validación del nombre
+    if (!regexNombre.test(normalizedName)) {
+        throw new Error("El nombre debe contener entre 3 y 60 caracteres, únicamente letras y espacios.");
+    }
+
+    // Validación del teléfono
+    if (!regexTelefono.test(normalizedTelefono)) {
+        throw new Error("El teléfono debe contener exactamente 10 dígitos.");
+    }
+
+    // Validación del correo
+    if (!regexCorreo.test(normalizedEmail)) {
+        throw new Error("Introduce un correo electrónico válido.");
+    }
+
+    // Validación de la contraseña
+    if (!regexPassword.test(password)) {
+        throw new Error("La contraseña no cumple con los requisitos.");
+    }
+
+    // Verificar si el correo ya está registrado
+    if (users.some((user) => user.email === normalizedEmail)) {
+        throw new Error("Ya existe una cuenta registrada con ese correo.");
+    }
+
+    // Guardar usuario
+    users.push({
+        name: normalizedName,
+        telefono: normalizedTelefono,
+        email: normalizedEmail,
+        password
+    });
+
+    localStorage.setItem(LUDUS_USERS_KEY, JSON.stringify(users));
 }
 
 function loginUser({ email, password }) {
