@@ -8,7 +8,7 @@ if (navbar) {
       <div class="container-fluid px-lg-5">
         <a class="navbar-brand d-flex align-items-center gap-2 brand-ludus" href="./index.html">
           <img src="IMAGE/logo_dark.png" alt="Logo LUDUS" class="brand-logo-img logo-dark">
-          <img src="IMAGE/logo_light.png" alt="Logo LUDUS" class="brand-logo-img logo-light">
+          <img src="IMAGE/logo_light.png" alt="Logo LUDUS" class="brand-logo-img logo-light">                                                                                                                                         
           <span>LUDUS</span>
         </a>
 
@@ -27,7 +27,10 @@ if (navbar) {
           </ul>
 
           <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-            <button id="theme-toggle" class="btn btn-outline-secondary btn-sm" type="button">Modo oscuro</button>
+            <button id="theme-toggle" class="btn btn-outline-secondary btn-sm" type="button">
+              <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+              <span>Modo oscuro</span>
+            </button>
             ${currentUser
               ? `<span class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}</span>
                  <button id="auth-action" class="btn btn-login text-nowrap" type="button">Cerrar sesión</button>`

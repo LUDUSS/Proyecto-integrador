@@ -519,6 +519,7 @@
             && Number.isInteger(review.rating)
             && review.rating >= 1
             && review.rating <= 5
+            // comprobar la posición de una imagen dentro de la tarjeta.
             && (
                 review.imagePosition === undefined
                 || (

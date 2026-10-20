@@ -1,7 +1,7 @@
 const footerContainer = document.getElementById('footer');
 
 footerContainer.innerHTML = `
-  <footer class="bg-dark text-white pt-5 pb-3">
+  <footer class="bg-dark text-white pt-5 pb-3 footer-responsive">
     <div class="container">
       <div class="row g-4">
         
@@ -14,21 +14,21 @@ footerContainer.innerHTML = `
         </div>
 
         <!-- Navegación -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-3 footer-section">
           <h5 class="fw-bold">Navegación</h5>
           <ul class="list-unstyled">
             <li class="mb-2"><a href="index.html" class="text-white text-decoration-none">Inicio</a></li>
-            <li class="mb-2"><a href="#juegosDestacados" class="text-white text-decoration-none">Juegos destacados</a></li>
+            <li class="mb-2"><a href="juegos.html" class="text-white text-decoration-none">Juegos</a></li>
             <li class="mb-2"><a href="./contactanos.html" class="text-white text-decoration-none">Contáctanos</a></li>
             <li><a href="acercade.html" class="text-white text-decoration-none">Acerca de nosotros</a></li>
           </ul>
         </div>
 
         <!-- Redes sociales -->
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-4 footer-section">
           <h5 class="fw-bold">Síguenos</h5>
           <p class="text-secondary">Mantente al día con las novedades de nuestra comunidad.</p>
-          <div class="d-flex gap-3">
+          <div class="d-flex gap-3 footer-section">
             <a href="https://www.facebook.com/profile.php?id=61595166929606" class="text-white fs-4" target="_blank"><i class="bi bi-facebook"></i></a>
             <a href="https://www.instagram.com/ludus_real/" class="text-white fs-4" target="_blank"><i class="bi bi-instagram"></i></a>
             <a href="https://x.com/luduss10?s=11" class="text-white fs-4" target="_blank"><i class="bi bi-twitter-x"></i></a>
