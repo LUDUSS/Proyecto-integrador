@@ -26,8 +26,8 @@
           </div>
           <div class="mb-3">
             <label for="telefono" class="form-label">Telefono</label>
-            <input id="telefono" name="telefono" type="tel" class="form-control" autocomplete="tel" inputmode="numeric" pattern="[0-9]{10}"
-              maxlength="10" required>
+            <input id="telefono" name="telefono" type="tel" class="form-control" autocomplete="tel" inputmode="numeric"
+              pattern="[0-9]{10}" maxlength="10" required>
           </div>
           <div class="mb-3">
             <label for="email" class="form-label">Correo electrónico</label>
@@ -37,7 +37,38 @@
             <label for="password" class="form-label">Contraseña</label>
             <input id="password" name="password" type="password" class="form-control" autocomplete="new-password"
               minlength="8" required>
-            <div class="form-text">Usa al menos 8 caracteres. No uses una contraseña real que utilices en otros sitios.
+            <div id="password-rules" class="password-tooltip">
+
+              <p>La contraseña debe contener:</p>
+
+              <ul>
+                <li id="rule-length">
+                  <i class="bi bi-x-circle-fill text-danger"></i>
+                  Mínimo 8 caracteres
+                </li>
+
+                <li id="rule-upper">
+                  <i class="bi bi-x-circle-fill text-danger"></i>
+                  Una letra mayúscula
+                </li>
+
+                <li id="rule-lower">
+                  <i class="bi bi-x-circle-fill text-danger"></i>
+                  Una letra minúscula
+                </li>
+
+                <li id="rule-number">
+                  <i class="bi bi-x-circle-fill text-danger"></i>
+                  Un número
+                </li>
+
+                <li id="rule-special">
+                  <i class="bi bi-x-circle-fill text-danger"></i>
+                  Un carácter especial
+                </li>
+
+              </ul>
+
             </div>
           </div>
           <div class="mb-3">
@@ -58,6 +89,44 @@
   <script src="./JS/theme.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    const passwordInput = document.getElementById("password");
+    const reglaMayuscula = document.getElementById("rule-upper");
+    const reglaMinuscula = document.getElementById("rule-lower");
+    const reglaNumero = document.getElementById("rule-number");
+    const reglaCarEspecial = document.getElementById("rule-special");
+    const reglaCaracteres = document.getElementById("rule-length");
+
+    const iconoMayuscula = reglaMayuscula.querySelector("i");
+    const iconoMinuscula = reglaMinuscula.querySelector("i");
+    const iconoNumero = reglaNumero.querySelector("i");
+    const iconoCarEspecial = reglaCarEspecial.querySelector("i");
+    const iconoCaracteres = reglaCaracteres.querySelector("i");
+
+    function actualizarValidacion(icono, cumple) {
+      if (cumple) {
+        icono.className = "bi bi-check-circle-fill text-success";
+      } else {
+        icono.className = "bi bi-x-circle-fill text-danger";
+      }
+    }
+
+    passwordInput.addEventListener("input", () => {
+      const password = passwordInput.value;
+      const regexMayuscula = /[A-Z]/;
+      const regexMinuscula = /[a-z]/;
+      const regexCarEspecial = /[!@#$%^&*?_-]/;
+      const regexNumero = /[0-9]/;
+
+      actualizarValidacion(iconoMayuscula, regexMayuscula.test(password));
+      actualizarValidacion(iconoMinuscula, regexMinuscula.test(password));
+      actualizarValidacion(iconoNumero, regexNumero.test(password));
+      actualizarValidacion(iconoCarEspecial, regexCarEspecial.test(password));
+      actualizarValidacion(iconoCaracteres, (password.length >= 8));
+
+    });
+
+
+
     const registerForm = document.getElementById("register-form");
     const message = document.getElementById("form-message");
 
