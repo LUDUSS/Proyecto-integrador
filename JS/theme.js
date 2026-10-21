@@ -24,9 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!themeToggleBtn) return;
     
     if (theme === 'dark') {
-      themeToggleBtn.innerHTML = 'Modo claro';
+      themeToggleBtn.innerHTML = '<i class="bi bi-sun-fill" aria-hidden="true"></i> <span></span>';
     } else {
-      themeToggleBtn.innerHTML = 'Modo oscuro';
+      themeToggleBtn.innerHTML = '<i class="bi bi-moon-stars-fill" aria-hidden="true"></i> <span></span>';
     }
   }
 });

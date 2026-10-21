@@ -3,6 +3,7 @@
 
 <head>
   <link rel="icon" type="image/x-icon" href="./IMAGE/favicon.ico">
+  <link rel="stylesheet" href="./css/footer.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PaginaInicio</title>
@@ -75,8 +76,21 @@
   <!-- JUEGOS DESTACADOS -->
   <section id="juegosDestacados" class="container py-5">
     <h2 class="fw-bold mb-4">Juegos Destacados</h2>
-    <!-- Contenedor dinámico cargado por JS -->
-    <div id="container-juegos-destacados" class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4"></div>
+    
+    <div id="carouselJuegos" class="carousel slide" data-bs-ride="carousel">
+      <!-- slides con las tarjetasdel carrusel -->
+      <div class="carousel-inner" id="container-juegos-destacados"></div>
+      
+      <!-- Controles del carrusel -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselJuegos" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselJuegos" data-bs-slide="next">
+        <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+      </button>
+    </div>
   </section>
 
   <!-- RESEÑAS RECIENTES -->
@@ -112,8 +126,7 @@
     <!-- Tarjeta 3 -->
     <article class="card">
       <div class="card-header header-teal">
-        <img src="https://i.pinimg.com/originals/3b/45/04/3b4504df916b84cd6db62f5c5c7a542a.jpg" alt="Avatar Kula"
-          class="avatar-img">
+        <img src="https://i.pinimg.com/originals/3b/45/04/3b4504df916b84cd6db62f5c5c7a542a.jpg" alt="Avatar Kula" class="avatar-img">
       </div>
       <div class="card-body">
         <span class="top-tag">Kula</span>
@@ -127,8 +140,7 @@
     <!-- Tarjeta 4 -->
     <article class="card">
       <div class="card-header header-teal">
-        <img src="https://tse4.mm.bing.net/th/id/OIP.FGWTME_D8D3diAqlaJ6OsAHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
-          alt="Avatar Jinx" class="avatar-img">
+        <img src="https://tse4.mm.bing.net/th/id/OIP.FGWTME_D8D3diAqlaJ6OsAHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" alt="Avatar Jinx" class="avatar-img">
       </div>
       <div class="card-body">
         <span class="top-tag">Jinx</span>

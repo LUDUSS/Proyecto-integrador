@@ -7,15 +7,16 @@ body {
   margin: 0px;
 }
 
+#lista-resenias{
+    max-width: none;
+}
+
 .tarjetas-container .card {
   background-color: var(--bs-body-bg);
   /* Adapta el fondo al modo claro u oscuro */
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  position: relative;
   border: none;
 }
 
@@ -160,16 +161,6 @@ body {
     padding: 0;
 }
 
-/* Mantiene el botón agregar reseña con el color de fondo del tema actual. */
-.btn-agregar-resenia,
-.btn-agregar-resenia:hover,
-.btn-agregar-resenia:focus,
-.btn-agregar-resenia:active {
-    background-color: var(--bs-body-bg);
-    border-color: var(--bs-border-color);
-    color: var(--bs-body-color);
-}
-
 /* Mantiene el color del formulario legible en ambos temas. */
 .formulario-resenia {
     color: var(--bs-body-color);
@@ -215,12 +206,13 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    width: auto;
 }
 
 /* Tarjeta del videojuego */
 .tarjeta-juego {
     width: 100%;
-    max-width: 1000px;
+    max-width: 1500px;
     background: var(--bs-body-bg);
     color: var(--bs-body-color);
     border: 1px solid var(--bs-border-color);
@@ -265,7 +257,7 @@ body {
 /* Imagen: ocupa toda la altura de la tarjeta */
 
 .tarjeta-juego__imagen {
-    width: 1000px;
+    width: 1500px;
     height: 450px;
    
 }
