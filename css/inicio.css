@@ -311,3 +311,28 @@ h6,
   color: #ffffff !important;
   border-radius: 6px;
 }
+
+/* Validación de contraseña */
+.password-tooltip {
+    display: none;
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.password-tooltip.show {
+    display: block;
+}
+
+.password-tooltip ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.password-tooltip li {
+    margin-bottom: 6px;
+}
