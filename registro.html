@@ -89,20 +89,25 @@
   <script src="./JS/theme.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Elementos HTML de la contraseña
     const passwordInput = document.getElementById("password");
     const passwordRules = document.getElementById("password-rules");
+
+    // Elementos de cada regla
     const reglaMayuscula = document.getElementById("rule-upper");
     const reglaMinuscula = document.getElementById("rule-lower");
     const reglaNumero = document.getElementById("rule-number");
     const reglaCarEspecial = document.getElementById("rule-special");
     const reglaCaracteres = document.getElementById("rule-length");
 
+    // Iconos de cada regla
     const iconoMayuscula = reglaMayuscula.querySelector("i");
     const iconoMinuscula = reglaMinuscula.querySelector("i");
     const iconoNumero = reglaNumero.querySelector("i");
     const iconoCarEspecial = reglaCarEspecial.querySelector("i");
     const iconoCaracteres = reglaCaracteres.querySelector("i");
 
+    // Actualizar los iconos según el resultado
     function actualizarValidacion(icono, cumple) {
       if (cumple) {
         icono.className = "bi bi-check-circle-fill text-success";
@@ -111,16 +116,10 @@
       }
     }
 
-    passwordInput.addEventListener("focus", () => {
-      passwordRules.classList.add("show");
-    });
-
-    passwordInput.addEventListener("blur", () => {
-      passwordRules.classList.remove("show");
-    });
-
-    passwordInput.addEventListener("input", () => {
+    // Validar visualmente los requisitos de la contraseña
+    function validacionPasswordVisual() {
       const password = passwordInput.value;
+
       const regexMayuscula = /[A-Z]/;
       const regexMinuscula = /[a-z]/;
       const regexCarEspecial = /[!@#$%^&*?_-]/;
@@ -130,12 +129,24 @@
       actualizarValidacion(iconoMinuscula, regexMinuscula.test(password));
       actualizarValidacion(iconoNumero, regexNumero.test(password));
       actualizarValidacion(iconoCarEspecial, regexCarEspecial.test(password));
-      actualizarValidacion(iconoCaracteres, (password.length >= 8));
+      actualizarValidacion(iconoCaracteres, password.length >= 8);
+    }
 
+    // Mostrar el globo cuando se selecciona el campo
+    passwordInput.addEventListener("focus", () => {
+      passwordRules.classList.add("show");
     });
 
+    // Ocultar el globo al salir del campo
+    passwordInput.addEventListener("blur", () => {
+      passwordRules.classList.remove("show");
+    });
+
+    // Actualizar las validaciones mientras se escribe
+    passwordInput.addEventListener("input", validacionPasswordVisual);
 
 
+    // Registro de usuario
     const registerForm = document.getElementById("register-form");
     const message = document.getElementById("form-message");
 
@@ -146,6 +157,7 @@
       const password = registerForm.password.value;
       const confirmPassword = registerForm.confirmPassword.value;
 
+      // Verificar que ambas contraseñas coincidan
       if (password !== confirmPassword) {
         message.textContent = "Las contraseñas no coinciden.";
         message.className = "alert alert-danger";
@@ -159,9 +171,16 @@
           email: registerForm.email.value,
           password
         });
-        message.textContent = "Cuenta creada. Ahora inicia sesión con tu correo y contraseña.";
+
+        message.textContent =
+          "Cuenta creada. Ahora inicia sesión con tu correo y contraseña.";
         message.className = "alert alert-success";
+
+        // Limpiar formulario y reiniciar validaciones
         registerForm.reset();
+        validacionPasswordVisual();
+        passwordRules.classList.remove("show");
+
       } catch (error) {
         message.textContent = error.message;
         message.className = "alert alert-danger";
