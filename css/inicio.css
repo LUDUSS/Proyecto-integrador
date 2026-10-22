@@ -103,15 +103,52 @@ h6,
   color: var(--bs-body-color) !important;
 }
 
-/* Contenedor principal: 4 columnas en 1 sola fila */
-.tarjetas-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+
+/* ========================================
+   RESEÑAS RECIENTES - RESPONSIVE
+======================================== */
+
+/* Contenedor de tarjetas */
+.reseñas-recientes .tarjetas-container {
+  width: auto;
+  max-width: none;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Columnas de Bootstrap */
+.reseñas-recientes .tarjetas-container > .col {
+  min-width: 0;
+}
+
+/* Estructura de las tarjetas */
+.reseñas-recientes .card {
   width: 100%;
-  max-width: 1100px;
-  margin: 40px auto;
-  padding: 0 20px;
+  height: 100%;
+  min-width: 0;
+}
+
+/* Contenido */
+.reseñas-recientes .card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Botón alineado al fondo */
+.reseñas-recientes .btn-invite {
+  margin-top: auto;
+}
+
+/* Separación del texto y el botón */
+.reseñas-recientes .mutual-connections {
+  margin-bottom: 16px;
+}
+
+/* Evitar desbordamiento con textos largos */
+.reseñas-recientes .card-name,
+.reseñas-recientes .card-title {
+  overflow-wrap: anywhere;
 }
 
 /* Estructura base de la tarjeta sin romper Bootstrap */
