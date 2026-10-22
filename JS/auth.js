@@ -37,7 +37,7 @@ function registerUser({ name, email, password, telefono }) {
     const users = getUsers();
 
     const regexNombre = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]{3,60}$/;
-    const regexTelefono = /^[0-9]{10}$/;
+    const regexTelefono = /^(?!([0-9])\1{9}$)(?!911)[2-9][1-9][0-9]{8}$/;
     const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const regexPassword = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*?_-]).{8,}$/;
 
@@ -48,7 +48,7 @@ function registerUser({ name, email, password, telefono }) {
 
     // Validación del teléfono
     if (!regexTelefono.test(normalizedTelefono)) {
-        throw new Error("El teléfono debe contener exactamente 10 dígitos.");
+        throw new Error("El teléfono que ingresaste no es válido.");
     }
 
     // Validación del correo
