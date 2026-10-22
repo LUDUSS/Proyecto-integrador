@@ -3,7 +3,6 @@
 
 <head>
   <link rel="icon" type="image/x-icon" href="./IMAGE/favicon.ico">
-  <link rel="stylesheet" href="https://jsdelivr.net">
   <link rel="stylesheet" href="./css/footer.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -77,8 +76,21 @@
   <!-- JUEGOS DESTACADOS -->
   <section id="juegosDestacados" class="container py-5">
     <h2 class="fw-bold mb-4">Juegos Destacados</h2>
-    <!-- Contenedor dinámico cargado por JS -->
-    <div id="container-juegos-destacados" class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4"></div>
+    
+    <div id="carouselJuegos" class="carousel slide" data-bs-ride="carousel">
+      <!-- slides con las tarjetasdel carrusel -->
+      <div class="carousel-inner" id="container-juegos-destacados"></div>
+      
+      <!-- Controles del carrusel -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselJuegos" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselJuegos" data-bs-slide="next">
+        <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+      </button>
+    </div>
   </section>
 
 
