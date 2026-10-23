@@ -1,7 +1,6 @@
 (() => {
     // Clave que identifica las reseñas guardadas y eliminadas en el almacenamiento del navegador.
     const STORAGE_KEY = 'resenias-videojuegos';
-    const INITIAL_GAME_REMOVED_KEY = 'juego-inicial-eliminado';
     // Busca los elementos de la página que utiliza esta funcionalidad.
     const button = document.getElementById('mostrar-formulario-resenia');
     const form = document.getElementById('formulario-resenia');
@@ -44,10 +43,6 @@
 
     try {
         savedReviews = loadReviews();
-
-        if (localStorage.getItem(INITIAL_GAME_REMOVED_KEY) === 'true') {
-            reviewsList.querySelector('[data-juego-inicial]')?.remove();
-        }
     } catch (error) {
         console.error('No se pudieron cargar las reseñas guardadas.', error);
         alert('No se pudieron cargar las reseñas guardadas. Revisa el almacenamiento del navegador.');
@@ -55,19 +50,98 @@
         return;
     }
 
-    // Función para renderizar todas las reseñas nuevamente
+    // Renderiza las reseñas guardadas.
     function renderReviews() {
-        // Mantiene la tarjeta inicial si existe y limpia el resto de reseñas guardadas
-        const initialCard = reviewsList.querySelector('[data-juego-inicial]');
         reviewsList.innerHTML = '';
-        if (initialCard) {
-            reviewsList.appendChild(initialCard);
-        }
-
         savedReviews.forEach((review, index) => {
-            reviewsList.appendChild(createReviewCard(review, index));
+            const card = createReviewCard(review, index);
+            reviewsList.appendChild(card);
+        });
+        updateReviewOverflow();
+        window.dispatchEvent(new CustomEvent('resenias:actualizadas', {
+            detail: savedReviews
+        }));
+    }
+
+    function updateReviewOverflow() {
+        reviewsList.querySelectorAll('.tarjeta-juego').forEach((card) => {
+            const reviewText = card.querySelector('.tarjeta-juego__texto-resenia');
+            const expandButton = card.querySelector('.tarjeta-juego__ver-mas');
+            if (!reviewText || !expandButton) {
+                return;
+            }
+
+            const wasExpanded = reviewText.classList.contains('is-expanded');
+            reviewText.classList.remove('is-expanded');
+            const collapsedHeight = reviewText.getBoundingClientRect().height;
+            reviewText.classList.toggle('is-expanded', wasExpanded);
+            const expandedText = reviewText.cloneNode(true);
+            const computedStyle = window.getComputedStyle(reviewText);
+            const inheritedStyles = [
+                'font',
+                'line-height',
+                'letter-spacing',
+                'word-spacing',
+                'text-align',
+                'text-indent',
+                'text-transform',
+                'white-space',
+                'overflow-wrap',
+                'word-break',
+                'padding',
+                'border',
+                'box-sizing'
+            ];
+
+            expandedText.removeAttribute('id');
+            expandedText.classList.add('is-expanded');
+            expandedText.setAttribute('aria-hidden', 'true');
+            expandedText.style.position = 'fixed';
+            expandedText.style.top = '0';
+            expandedText.style.left = '-100000px';
+            expandedText.style.width = `${reviewText.getBoundingClientRect().width}px`;
+            expandedText.style.height = 'auto';
+            expandedText.style.minHeight = '0';
+            expandedText.style.maxHeight = 'none';
+            expandedText.style.margin = '0';
+            expandedText.style.overflow = 'visible';
+            expandedText.style.visibility = 'hidden';
+            expandedText.style.flex = 'none';
+            inheritedStyles.forEach((property) => {
+                expandedText.style.setProperty(property, computedStyle.getPropertyValue(property));
+            });
+
+            document.body.appendChild(expandedText);
+            const expandedHeight = expandedText.getBoundingClientRect().height;
+            expandedText.remove();
+
+            const hasOverflow = expandedHeight > collapsedHeight + 1;
+            expandButton.hidden = !hasOverflow;
+            if (!hasOverflow) {
+                reviewText.classList.toggle('is-expanded', false);
+                expandButton.textContent = 'Ver más';
+                expandButton.setAttribute('aria-expanded', 'false');
+            } else {
+                reviewText.classList.toggle('is-expanded', wasExpanded);
+                expandButton.textContent = wasExpanded ? 'Ver menos' : 'Ver más';
+                expandButton.setAttribute('aria-expanded', String(wasExpanded));
+            }
         });
     }
+
+    let overflowCheckScheduled = false;
+    window.addEventListener('resize', () => {
+        if (overflowCheckScheduled) {
+            return;
+        }
+        overflowCheckScheduled = true;
+        window.requestAnimationFrame(() => {
+            overflowCheckScheduled = false;
+            updateReviewOverflow();
+        });
+    });
+
+    window.addEventListener('load', updateReviewOverflow, { once: true });
 
     // Manejador de eventos para Eliminar y Editar
     reviewsList.addEventListener('click', (event) => {
@@ -77,9 +151,22 @@
 
         const deleteButton = event.target.closest('.btn-accion.eliminar');
         const editButton = event.target.closest('.btn-accion.editar');
+        const expandButton = event.target.closest('.tarjeta-juego__ver-mas');
         const card = event.target.closest('.tarjeta-juego');
 
         if (!card) {
+            return;
+        }
+
+        if (expandButton) {
+            const reviewText = card.querySelector('.tarjeta-juego__texto-resenia');
+            if (!reviewText) {
+                return;
+            }
+
+            const isExpanded = reviewText.classList.toggle('is-expanded');
+            expandButton.textContent = isExpanded ? 'Ver menos' : 'Ver más';
+            expandButton.setAttribute('aria-expanded', String(isExpanded));
             return;
         }
 
@@ -100,28 +187,6 @@
 
                 // Solo eliminar si el usuario confirma
                 if (!result.isConfirmed) {
-                    return;
-                }
-
-                if (card.hasAttribute('data-juego-inicial')) {
-                    try {
-                        localStorage.setItem(INITIAL_GAME_REMOVED_KEY, 'true');
-                    } catch (error) {
-                        console.error(
-                            'No se pudo guardar la eliminación de la tarjeta.',
-                            error
-                        );
-
-                        Swal.fire({
-                            title: "Error",
-                            text: "No se pudo eliminar la tarjeta. Revisa el almacenamiento del navegador.",
-                            icon: "error"
-                        });
-
-                        return;
-                    }
-
-                    card.remove();
                     return;
                 }
 
@@ -161,11 +226,6 @@
         }
         // ACCIÓN: EDITAR
         if (editButton) {
-            if (card.hasAttribute('data-juego-inicial')) {
-                alert('La tarjeta predeterminada no se puede editar.');
-                return;
-            }
-
             const reviewIndex = Number(card.dataset.reviewIndex);
             const reviewToEdit = savedReviews[reviewIndex];
 
@@ -403,9 +463,9 @@
             nameInput.classList.add('is-valid');
         }
 
-        if (!reviewText || reviewText.length > 1000) {
+        if (!reviewText || reviewText.length > 10000) {
             reviewFeedback.textContent = reviewText
-                ? 'La reseña no puede superar los 1000 caracteres.'
+                ? 'La reseña no puede superar los 10000 caracteres.'
                 : 'El campo reseña no puede estar vacío.';
             reviewInput.classList.add('is-invalid');
             isValid = false;
@@ -597,7 +657,7 @@
         imageColumn.appendChild(image);
 
         const contentColumn = document.createElement('div');
-        contentColumn.className = 'col-md-12 tarjeta-juego__contenido';
+        contentColumn.className = 'col-md-8 tarjeta-juego__contenido';
 
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body tarjeta-juego__cuerpo';
@@ -610,8 +670,17 @@
         title.textContent = gameName;
 
         const review = document.createElement('p');
-        review.className = 'card-text';
+        review.className = 'card-text tarjeta-juego__texto-resenia';
+        review.id = `resenia-texto-${reviewIndex}`;
         review.textContent = reviewText;
+
+        const expandButton = document.createElement('button');
+        expandButton.type = 'button';
+        expandButton.className = 'tarjeta-juego__ver-mas';
+        expandButton.textContent = 'Ver más';
+        expandButton.setAttribute('aria-controls', review.id);
+        expandButton.setAttribute('aria-expanded', 'false');
+        expandButton.hidden = true;
 
         const note = document.createElement('p');
         note.className = 'card-text';
@@ -620,7 +689,7 @@
         noteText.textContent = 'Tu reseña.';
         note.appendChild(noteText);
 
-        description.append(title, review, note);
+        description.append(title, review, expandButton, note);
 
         const ratingSection = document.createElement('div');
         ratingSection.className = 'tarjeta-juego__calificacion';
