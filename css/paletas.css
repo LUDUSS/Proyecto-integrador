@@ -1,0 +1,207 @@
+/* 
+PALETAS DE COLORES LUDUS 
+*/
+
+/*1. DEFINICION DE PALETAS */
+:root, [data-palette="neon"] {
+  --ludus-primary: #7c3aed; --ludus-primary-rgb: 124, 58, 237;
+  --ludus-secondary: #06b6d4; --ludus-secondary-rgb: 6, 182, 212;
+  --ludus-gradient: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+  /* Fondo de pantalla completo */
+  --ludus-bg-light: linear-gradient(135deg, #f3e8ff 0%, #e0f2fe 100%);
+  --ludus-bg-dark: linear-gradient(135deg, #1a0b2e 0%, #081a26 100%);
+}
+[data-palette="sunset"] {
+  --ludus-primary: #f97316; --ludus-primary-rgb: 249, 115, 22;
+  --ludus-secondary: #ec4899; --ludus-secondary-rgb: 236, 72, 153;
+  --ludus-gradient: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+  --ludus-bg-light: linear-gradient(135deg, #ffedd5 0%, #fce7f3 100%);
+  --ludus-bg-dark: linear-gradient(135deg, #2a1004 0%, #260818 100%);
+}
+[data-palette="forest"] {
+  --ludus-primary: #16a34a; --ludus-primary-rgb: 22, 163, 74;
+  --ludus-secondary: #0d9488; --ludus-secondary-rgb: 13, 148, 136;
+  --ludus-gradient: linear-gradient(135deg, #16a34a 0%, #0d9488 100%);
+  --ludus-bg-light: linear-gradient(135deg, #dcfce7 0%, #ccfbf1 100%);
+  --ludus-bg-dark: linear-gradient(135deg, #061f10 0%, #04211d 100%);
+}
+[data-palette="cyber"] {
+  --ludus-primary: #e11d48; --ludus-primary-rgb: 225, 29, 72;
+  --ludus-secondary: #8b5cf6; --ludus-secondary-rgb: 139, 92, 246;
+  --ludus-gradient: linear-gradient(135deg, #e11d48 0%, #8b5cf6 100%);
+  --ludus-bg-light: linear-gradient(135deg, #ffe4e6 0%, #ede9fe 100%);
+  --ludus-bg-dark: linear-gradient(135deg, #2a040d 0%, #170830 100%);
+}
+
+/*2. VARIABLES DE BOOTSTRAP*/
+:root, [data-bs-theme="light"], [data-bs-theme="dark"] {
+  --bs-primary: var(--ludus-primary);
+  --bs-primary-rgb: var(--ludus-primary-rgb);
+  --bs-link-color: var(--ludus-primary);
+  --bs-link-hover-color: var(--ludus-secondary);
+}
+
+/* 3. FONDO DEGRADADO */
+html {
+  min-height: 100vh;
+}
+body {
+  background-image: var(--ludus-bg-light) !important;
+  background-attachment: fixed !important;
+  background-size: cover !important;
+  transition: background 0.5s ease, color 0.5s ease;
+  color: #212529;
+}
+
+[data-bs-theme="dark"] body {
+  background-image: var(--ludus-bg-dark) !important;
+  color: #e9ecef;
+}
+
+/* 4. NAVBAR  */
+.navbar {
+  border-bottom: 2px solid rgba(var(--ludus-primary-rgb), 0.4) !important;
+  background-color: transparent !important;
+  backdrop-filter: blur(10px);
+}
+.nav-link.active, .nav-link-active {
+  color: var(--ludus-primary) !important;
+  font-weight: 600;
+}
+
+/* 5. TITULOS */
+h1, h2 {
+  background: var(--ludus-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  width: 100%;
+}
+.text-center h1, .text-center h2 {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+h3, h4, h5 { color: var(--ludus-primary); }
+
+/*Evita que textos desaparezcan */
+p, small, span, li, a, div:not(.ludus-card-header) {
+  -webkit-text-fill-color: currentColor !important;
+}
+#que-es-ludus p { color: var(--bs-body-color) !important; font-size: 1.1rem; }
+#que-es-ludus p.text-center:first-child {
+  color: var(--ludus-primary) !important;
+  font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem;
+}
+
+/*6. TARJETAS (CRISTAL Y HOVER) */
+.card {
+  background-color: rgba(255, 255, 255, 0.75) !important; /* Mas transparente para que se vea el degradado detras */
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(var(--ludus-primary-rgb), 0.3) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+[data-bs-theme="dark"] .card {
+  background-color: rgba(20, 20, 25, 0.65) !important; /* Cristal oscuro */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(var(--ludus-primary-rgb), 0.3) !important;
+  border-color: rgba(var(--ludus-primary-rgb), 0.8) !important;
+}
+.card-header.ludus-card-header {
+  background: linear-gradient(135deg, var(--card-accent, var(--ludus-primary)), color-mix(in srgb, var(--card-accent, var(--ludus-primary)) 60%, #000));
+  color: #fff; border-bottom: none; min-height: 90px;
+  display: flex; align-items: center; padding: 1rem 1.25rem;
+}
+
+/* --- 7. ICONOS (MISION/VISION/CONTACTO) --- */
+.ludus-icon-box, #identidad .card i {
+  background: color-mix(in srgb, var(--ludus-primary) 20%, transparent);
+  color: var(--ludus-primary) !important;
+  padding: 0.6rem; border-radius: 0.75rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 15px rgba(var(--ludus-primary-rgb), 0.2);
+  transition: transform 0.3s ease;
+}
+#identidad .card:hover i { transform: scale(1.1) rotate(5deg); }
+
+/* 8. BOTONES */
+.btn-primary {
+  --bs-btn-bg: transparent; --bs-btn-border-color: transparent;
+  --bs-btn-hover-bg: transparent; --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-bg: transparent; --bs-btn-active-border-color: transparent;
+  background-image: var(--ludus-gradient);
+  border: none; color: #fff;
+  box-shadow: 0 4px 15px rgba(var(--ludus-primary-rgb), 0.4);
+  transition: all 0.3s ease;
+}
+.btn-primary:hover, .btn-primary:focus {
+  filter: brightness(1.1); color: #fff;
+  box-shadow: 0 6px 20px rgba(var(--ludus-primary-rgb), 0.6);
+  transform: translateY(-2px);
+}
+
+/* 9. FORMULARIOS Y SWATCH */
+.form-control:focus, .form-select:focus {
+  border-color: var(--ludus-primary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--ludus-primary-rgb), 0.25);
+}
+[data-bs-theme="dark"] .btn-light {
+  background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: var(--bs-body-color);
+}
+[data-bs-theme="dark"] .btn-light:hover { background-color: rgba(255, 255, 255, 0.15); }
+
+.paleta-swatch { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); flex-shrink: 0; }
+[data-bs-theme="dark"] .paleta-swatch { border-color: rgba(255,255,255,0.25); }
+
+
+
+  /* FONDO PARA SECCIONES ESPECÍFICAS*/
+ 
+.seccion-colorida {
+  background: var(--ludus-gradient); /* Usa el degradado de la paleta activa */
+  border-radius: 1.5rem; /* Bordes redondeados para que se vea moderno */
+  color: #ffffff !important; /* Forzar texto blanco para que resalte */
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Asegurar que el texto de esta sección sea blanco */
+.seccion-colorida h2, 
+.seccion-colorida h3, 
+.seccion-colorida p,
+.seccion-colorida span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important; /* Quita el gradiente del título para que sea blanco sólido */
+}
+
+
+/* MENU DE PALETAS EN CELULAR*/
+@media (max-width: 991px) {
+  /* Hace que el contenedor del navbar en celular tenga espacio */
+  .navbar-collapse {
+    padding-bottom: 1rem;
+  }
+  
+  /* El menu de la paleta debe abrirse hacia la izquierda o ajustarse al ancho */
+  .dropdown-menu.dropdown-menu-end {
+    position: absolute !important;
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+    min-width: 200px;
+  }
+
+  /* boton de tema ocupe su espacio sin empujar a los demas */
+  .d-flex.align-items-center.gap-2 {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
