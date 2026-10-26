@@ -705,7 +705,7 @@ body {
 /* Tarjeta del videojuego */
 .tarjeta-juego {
     width: 100%;
-    max-width: 1200px;
+    max-width: 100%;
     background: var(--bs-body-bg);
     color: var(--bs-body-color);
     border: 1px solid var(--lines-color);
