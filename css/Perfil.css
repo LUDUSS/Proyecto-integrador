@@ -479,6 +479,14 @@ body {
     box-shadow: 0 0 10px var(--swatch-color);
 }
 
+[data-bs-theme="light"] .perfil-color-linea[data-color="transparent"] {
+    border-color: #000;
+}
+
+[data-bs-theme="dark"] .perfil-color-linea[data-color="transparent"] {
+    border-color: #fff;
+}
+
 .perfil-color-linea:focus-visible {
     outline: 3px solid var(--bs-primary);
     outline-offset: 2px;

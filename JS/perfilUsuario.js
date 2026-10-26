@@ -15,9 +15,12 @@
         { value: '#00f5ff', label: 'Azúl neón' },
         { value: '#ff00e5', label: 'Rosa neón' },
         { value: '#ff6d00', label: 'Naranja neón' },
-        { value: '#6f00ff', label: 'Morado neón' }
+        { value: '#6f00ff', label: 'Morado neón' },
+        { value: '#000000', label: 'Negro' },
+        { value: '#8b8484fa', label: 'Gris' },
+        { value: 'transparent', label: 'Sin color' } 
     ];
-    const DEFAULT_LINES_COLOR = '#39ff14';
+    const DEFAULT_LINES_COLOR = '#8b8484fa';
     const AVATAR_PRESETS = [
         { label: 'Avatar 1', source: './IMAGE/perfil/avatar-1.png' },
         { label: 'Avatar 2', source: './IMAGE/perfil/avatar-2.png' },
