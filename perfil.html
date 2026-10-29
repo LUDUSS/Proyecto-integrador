@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="./css/acercade.css">
     <link rel="stylesheet" href="./css/Perfil.css">
     <link rel="stylesheet" href="./css/footer.css">
+    <link rel="stylesheet" href="./css/paletas.css"> 
 </head>
 
 <body>
@@ -65,15 +66,162 @@
             </div>
         </aside>
 
-        <!-- Contenido de videojuegos -->
+        <!-- Contenido de videojuegos y perfil del usuario-->
         <section class="perfil-content">
 
-            <!-- Botón que abre el formulario para crear una reseña. -->
-            <div class="d-flex justify-content-end mb-3">
-                <button id="mostrar-formulario-resenia" class="btn btn-primary btn-agregar-resenia px-4 py-2"
-                    type="button" aria-expanded="false" aria-controls="modal-resenia">
-                    Agregar reseñas
-                </button>
+            <section class="perfil-usuario" aria-labelledby="perfil-alias">
+                <div class="perfil-portada">
+                    <img id="perfil-portada-imagen" alt="Foto de portada del perfil" hidden>
+                </div>
+
+                <div class="perfil-usuario__contenido">
+                    <div class="perfil-avatar">
+                        <img id="perfil-avatar-imagen" alt="Foto de perfil" hidden>
+                        <i class="bi bi-person-fill perfil-avatar__placeholder" aria-hidden="true"></i>
+                    </div>
+
+                    <div class="perfil-usuario__identidad">
+                        <h6 id="nombre-usuario" class="perfil-usuario_nombre"></h6>
+                        <h1 id="perfil-alias" class="perfil-usuario__alias">Jugador</h1>
+                        <span class="perfil-usuario__etiqueta">Perfil de jugador</span>
+                    </div>
+
+                    <div class="perfil-estadisticas" aria-label="Estadísticas de reseñas">
+                        <div class="perfil-estadistica">
+                            <strong id="perfil-total-resenias">0</strong>
+                            <span>Reseñas</span>
+                        </div>
+                        <div class="perfil-estadistica">
+                            <strong id="perfil-promedio-calificacion">—</strong>
+                            <span>Calificación media</span>
+                        </div>
+                        <div class="perfil-estadistica">
+                            <strong id="perfil-juegos-resenados">0</strong>
+                            <span>Juegos reseñados</span>
+                        </div>
+                    </div>
+                    <button id="editar-perfil" class="btn btn-primary perfil-editar__boton" type="button"
+                        data-bs-toggle="modal" data-bs-target="#modal-editar-perfil">
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                        Editar perfil
+                    </button>
+                </div>
+
+
+                <section id="sobre-mi" class="perfil-seccion perfil-sobre-mi" aria-labelledby="sobre-mi-titulo">
+                    <div class="perfil-seccion__encabezado">
+                        <div>
+                            <span class="perfil-seccion__eyebrow">Conóceme un poco</span>
+                            <h2 id="sobre-mi-titulo">Sobre mí</h2>
+                        </div>
+                        <i id="perfil-sobre-mi-icono" class="bi bi-controller" aria-hidden="true"></i>
+                    </div>
+                    <p id="perfil-descripcion" class="perfil-sobre-mi__texto"></p>
+                </section>
+
+                <p id="perfil-mensaje" class="perfil-mensaje" role="status" aria-live="polite"></p>
+
+                <ul class="nav perfil-navegacion">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#sobre-mi">Sobre mí</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#mis-resenias">Mis reseñas</a>
+                    </li>
+                </ul>
+
+            </section>
+
+            <section id="mis-resenias" class="perfil-seccion perfil-resenias" aria-labelledby="mis-resenias-titulo">
+                <div class="perfil-seccion__encabezado perfil-resenias__encabezado">
+                    <div>
+                        <span class="perfil-seccion__eyebrow">Tus opiniones, tu historia</span>
+                        <h2 id="mis-resenias-titulo">Mis reseñas</h2>
+                    </div>
+                    <button id="mostrar-formulario-resenia" class="btn btn-primary btn-agregar-resenia px-4 py-2"
+                        type="button" aria-expanded="false" aria-controls="modal-resenia">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                        Agregar reseña
+                    </button>
+                </div>
+
+                <!-- Las tarjetas de reseña se agregan dinámicamente desde JavaScript. -->
+                <div id="lista-resenias" class="lista-resenias"></div>
+            </section>
+
+            <!-- Modal para editar el alias, la descripción y las fotos del perfil. -->
+            <div id="modal-editar-perfil" class="modal fade" tabindex="-1" aria-labelledby="modal-editar-perfil-titulo"
+                aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable modal-editar-perfil__dialog">
+                    <form id="formulario-editar-perfil" class="modal-content formulario-perfil" novalidate>
+                        <div class="modal-header">
+                            <div>
+                                <span class="perfil-seccion__eyebrow">Personaliza tu espacio</span>
+                                <h2 id="modal-editar-perfil-titulo" class="modal-title fs-5">Editar perfil</h2>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="perfil-alias-input" class="form-label">Alias</label>
+                                <input id="perfil-alias-input" class="form-control" type="text" maxlength="30"
+                                    placeholder="Escribe tu alias" autocomplete="nickname" required>
+                                <div class="invalid-feedback">Escribe un alias para continuar.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="perfil-descripcion-input" class="form-label">Breve descripción</label>
+                                <textarea id="perfil-descripcion-input" class="form-control" rows="3" maxlength="240"
+                                    placeholder="¿Qué juegos te gustan? Cuéntales algo de ti."></textarea>
+                                <div class="form-text">Hasta 240 caracteres.</div>
+                            </div>
+                            <fieldset class="mb-3">
+                                <legend class="form-label">Icono</legend>
+                                <div id="perfil-iconos-sobre-mi" class="perfil-iconos-selector"
+                                    aria-label="Selecciona el icono de Sobre mí"></div>
+                            </fieldset>
+                            <fieldset class="mb-3">
+                                <legend class="form-label">Color de líneas</legend>
+                                <div id="perfil-colores-lineas" class="perfil-colores-lineas"
+                                    aria-label="Selecciona el color de las líneas del perfil (lines-color)"></div>
+                            </fieldset>
+                            <div class="mb-3">
+                                <label for="perfil-avatar-input" class="form-label">Foto de perfil</label>
+                                <input id="perfil-avatar-input" class="form-control" type="file" accept="image/*">
+                                <div class="form-text">Elige una imagen de tu dispositivo o un avatar.</div>
+                                <div id="perfil-avatares-predeterminados" class="perfil-avatares-predeterminados"
+                                    aria-label="Fotos de perfil predeterminadas"></div>
+                                <div id="perfil-avatar-recorte" class="perfil-recorte perfil-recorte--avatar mt-3"
+                                    tabindex="0" role="group" aria-label="Ajusta el recorte de tu foto de perfil"
+                                    aria-describedby="perfil-avatar-ayuda" hidden>
+                                    <img id="perfil-avatar-recorte-imagen" alt="Vista previa de la foto de perfil">
+                                </div>
+                                <small id="perfil-avatar-ayuda" class="form-text text-body-secondary" hidden>
+                                    Arrastra la imagen para elegir el encuadre.
+                                </small>
+                            </div>
+                            <div class="mb-0">
+                                <label for="perfil-portada-input" class="form-label">Foto de portada</label>
+                                <input id="perfil-portada-input" class="form-control" type="file" accept="image/*">
+                                <div id="perfil-portada-recorte" class="perfil-recorte perfil-recorte--portada mt-2"
+                                    tabindex="0" role="group" aria-label="Ajusta el recorte de tu foto de portada"
+                                    aria-describedby="perfil-portada-ayuda" hidden>
+                                    <img id="perfil-portada-recorte-imagen" alt="Vista previa de la foto de portada">
+                                </div>
+                                <small id="perfil-portada-ayuda" class="form-text text-body-secondary" hidden>
+                                    Arrastra la imagen para elegir el encuadre.
+                                </small>
+                            </div>
+                            <p id="perfil-edicion-error" class="text-danger small mt-3 mb-0" role="alert" hidden></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">
+                                Cancelar
+                            </button>
+                            <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Modal con el formulario para crear o editar una reseña. -->
@@ -109,10 +257,11 @@
                                 <input id="imagen-juego" name="imagenJuego" class="form-control" type="file"
                                     accept="image/*">
                                 <div class="invalid-feedback" id="imagen-juego-feedback"></div>
-                                <div id="imagen-juego-encuadre" class="imagen-encuadre mt-2" tabindex="0"
-                                    role="group" aria-label="Ajuste del encuadre de la imagen"
-                                    aria-describedby="imagen-juego-ayuda" hidden>
-                                    <img id="imagen-juego-preview" alt="Vista previa de la imagen; arrástrala para ajustar el encuadre">
+                                <div id="imagen-juego-encuadre" class="imagen-encuadre mt-2" tabindex="0" role="group"
+                                    aria-label="Ajuste del encuadre de la imagen" aria-describedby="imagen-juego-ayuda"
+                                    hidden>
+                                    <img id="imagen-juego-preview"
+                                        alt="Vista previa de la imagen; arrástrala para ajustar el encuadre">
                                 </div>
                                 <small id="imagen-juego-ayuda" class="form-text text-body-secondary" hidden>
                                     Arrastra la imagen para ajustar el encuadre.
@@ -167,106 +316,6 @@
                 </div>
             </div>
 
-            <!-- Contenedor de la tarjeta inicial y de las reseñas agregadas desde JavaScript. -->
-            <div id="lista-resenias" class="lista-resenias">
-                <!-- Tarjeta del videojuego -->
-                <article class="card tarjeta-juego" data-juego-inicial>
-
-                    <div class="row g-0 tarjeta-juego__fila">
-
-                        <!-- Imagen a la izquierda -->
-                        <div class="col-md-4 tarjeta-juego__imagen">
-                            <img src="./IMAGE/juegos/baldurs.jpg" alt="Baldur's Gate 3">
-                        </div>
-
-                        <!-- Descripción y calificación a la derecha -->
-                        <div class="col-md-12 tarjeta-juego__contenido">
-
-                            <div class="card-body tarjeta-juego__cuerpo">
-
-                                <!-- Descripción -->
-                                <div class="tarjeta-juego__descripcion">
-
-                                    <h5 class="card-title">
-
-                                        Baldur's Gate 3
-
-                                        <button type="button" class="btn-accion eliminar" title="Eliminar tarea"
-                                            aria-label="Eliminar tarea">
-                                            <i class="bi bi-trash" aria-hidden="true"></i>
-                                        </button>
-
-                                    </h5>
-
-                                    <p class="card-text">
-                                        Descubre este videojuego de rol y fantasía,
-                                        toma decisiones que cambiarán tu aventura
-                                        y comparte tu experiencia con otros jugadores.
-                                    </p>
-
-                                    <p class="card-text">
-                                        <small class="text-body-secondary">
-                                            Comparte tu opinión sobre este juego.
-                                        </small>
-                                    </p>
-                                </div>
-
-                                <!-- Calificación debajo de la descripción -->
-                                <div class="tarjeta-juego__calificacion">
-
-                                    <h6 class="card-title">
-                                        Califica tu experiencia
-                                    </h6>
-
-                                    <p class="card-text">
-                                        ¿Qué te pareció este videojuego?
-                                    </p>
-
-                                    <div class="wrap">
-                                        <div class="stars">
-
-                                            <label class="rate">
-                                                <input type="radio" name="radio1" id="star1" value="star1">
-                                                <div class="face"></div>
-                                                <i class="far fa-star star one-star"></i>
-                                            </label>
-
-                                            <label class="rate">
-                                                <input type="radio" name="radio1" id="star2" value="star2">
-                                                <div class="face"></div>
-                                                <i class="far fa-star star two-star"></i>
-                                            </label>
-
-                                            <label class="rate">
-                                                <input type="radio" name="radio1" id="star3" value="star3">
-                                                <div class="face"></div>
-                                                <i class="far fa-star star three-star"></i>
-                                            </label>
-
-                                            <label class="rate">
-                                                <input type="radio" name="radio1" id="star4" value="star4">
-                                                <div class="face"></div>
-                                                <i class="far fa-star star four-star"></i>
-                                            </label>
-
-                                            <label class="rate">
-                                                <input type="radio" name="radio1" id="star5" value="star5">
-                                                <div class="face"></div>
-                                                <i class="far fa-star star five-star"></i>
-                                            </label>
-
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-                </article>
-            </div>
-
         </section>
 
     </main>
@@ -289,7 +338,9 @@
     <script src="./JS/footer.js"></script>
     <script src="./JS/auth.js"></script>
     <script src="./JS/navbar.js"></script>
+    <script src="./JS/paletas.js"></script> 
     <script src="./JS/Perfil.js"></script>
+    <script src="./JS/perfilUsuario.js"></script>
     <!-- Lógica para crear, mostrar y guardar reseñas. -->
     <script src="./JS/resenias.js"></script>
 

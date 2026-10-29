@@ -171,22 +171,6 @@ h6,
   border: none;
 }
 
-.header-red {
-  background-color: #f78c80;
-}
-
-.header-pink {
-  background-color: #f48fb1;
-}
-
-.header-purple {
-  background-color: #ba68c8;
-}
-
-.header-teal {
-  background-color: #4db6ac;
-}
-
 /* Avatares y fotos circulares superpuestos */
 .avatar,
 .avatar-img {
@@ -373,3 +357,42 @@ h6,
 .password-tooltip li {
     margin-bottom: 6px;
 }
+
+/* menu de paletas */
+.dropdown-menu {
+    min-width: 14rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 0.5rem;
+    
+    /* altura */
+    height: auto !important; 
+    max-height: 300px; /*para que se quede del mismo tamanio*/
+}
+
+/* para que el contenedor del dropdown no se estire */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    white-space: normal;
+}
+/* menu este SIEMPRE por encima de todo */
+.dropdown-menu {
+    z-index: 9999 !important;
+}
+
+/* Si el navbar tiene fondo transparente */
+.navbar {
+    z-index: 1000;
+    position: relative; /* necesario para que el z-index funcione */
+}
+
+/*importar paleta de colores*/
+@import url("./paletas.css");

@@ -26,16 +26,55 @@ if (navbar) {
             ${currentUser ? '<li class="nav-item"><a class="nav-link" href="./perfil.html">Mi perfil</a></li>' : ''}
           </ul>
 
-          <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-            <button id="theme-toggle" class="btn btn-outline-secondary btn-sm" type="button">
-              <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
-              <span>Modo oscuro</span>
-            </button>
-            ${currentUser
-              ? `<span class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}</span>
-                 <button id="auth-action" class="btn btn-login text-nowrap" type="button">Cerrar sesión</button>`
-              : '<a class="btn btn-login text-nowrap" href="./login.html">Iniciar sesión</a>'}
-          </div>
+        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+
+  <!-- Selector de paleta -->
+  <div class="dropdown">
+    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+            id="selector-paleta" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-palette-fill" aria-hidden="true"></i>
+      <span class="d-none d-md-inline">Tema</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end shadow">
+      <li>
+        <button class="dropdown-item d-flex align-items-center gap-2" type="button" data-palette-set="neon">
+          <span class="paleta-swatch" style="background: linear-gradient(135deg, #7c3aed, #06b6d4);"></span>
+          Neón
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center gap-2" type="button" data-palette-set="sunset">
+          <span class="paleta-swatch" style="background: linear-gradient(135deg, #f97316, #ec4899);"></span>
+          Atardecer
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center gap-2" type="button" data-palette-set="forest">
+          <span class="paleta-swatch" style="background: linear-gradient(135deg, #16a34a, #0d9488);"></span>
+          Bosque
+        </button>
+      </li>
+      <li>
+        <button class="dropdown-item d-flex align-items-center gap-2" type="button" data-palette-set="cyber">
+          <span class="paleta-swatch" style="background: linear-gradient(135deg, #e11d48, #8b5cf6);"></span>
+          Cyberpunk
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Modo oscuro -->
+  <button id="theme-toggle" class="btn btn-outline-secondary btn-sm" type="button">
+    <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+    <span>Modo oscuro</span>
+  </button>
+
+  <!-- Login / logout -->
+  ${currentUser
+    ? `<span class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}</span>
+       <button id="auth-action" class="btn btn-login text-nowrap" type="button">Cerrar sesión</button>`
+    : '<a class="btn btn-login text-nowrap" href="./login.html">Iniciar sesión</a>'}
+</div>
         </div>
       </div>
     </nav>
