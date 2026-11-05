@@ -87,11 +87,12 @@ if (navbar) {
               <span>Modo oscuro</span>
             </button>
 
-            <!-- Login / logout -->
+            <!-- Login / logout y Registro -->
             ${currentUser
               ? `<span class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}</span>
                  <button id="auth-action" class="btn btn-login text-nowrap" type="button">Cerrar sesión</button>`
-              : '<a class="btn btn-login text-nowrap" href="./login.html">Iniciar sesión</a>'}
+              : `<a class="btn btn-login text-nowrap" href="./login.html">Iniciar sesión</a>
+                 <a class="btn btn-outline-secondary text-nowrap" href="./registro.html">Crear cuenta</a>`}
           </div>
         </div>
       </div>
