@@ -18,7 +18,7 @@ footerContainer.innerHTML = `
           <h5 class="fw-bold">Navegación</h5>
           <ul class="list-unstyled">
             <li class="mb-2"><a href="index.html" class="text-white text-decoration-none">Inicio</a></li>
-            <li class="mb-2"><a href="juegos.html" class="text-white text-decoration-none">Juegos</a></li>
+            <li class="mb-2"><a href="juegos.html" data-games-link class="text-white text-decoration-none">Juegos</a></li>
             <li class="mb-2"><a href="./contactanos.html" class="text-white text-decoration-none">Contáctanos</a></li>
             <li><a href="acercade.html" class="text-white text-decoration-none">Acerca de nosotros</a></li>
           </ul>
@@ -44,3 +44,10 @@ footerContainer.innerHTML = `
       </div>
     </div>
   </footer>`
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof getCurrentUser !== 'function' || getCurrentUser()) return;
+
+  const gamesLink = footerContainer.querySelector('[data-games-link]');
+  if (gamesLink) gamesLink.closest('li').remove();
+});
