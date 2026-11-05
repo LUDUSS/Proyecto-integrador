@@ -396,3 +396,46 @@ h6,
 
 /*importar paleta de colores*/
 @import url("./paletas.css");
+
+
+/* ==============================================================
+   Buscador de usuarios en barra de navegación - LUDUS
+   ============================================================== */
+.navbar-busqueda-wrapper {
+    min-width: 210px;
+    max-width: 300px;
+}
+
+.navbar-search-group {
+    border-radius: 20px;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.navbar-search-group:focus-within {
+    box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.35);
+}
+
+.navbar-search-group .input-group-text {
+    border-radius: 20px 0 0 20px;
+}
+
+.navbar-search-group input {
+    border-radius: 0 20px 20px 0;
+}
+
+.navbar-search-dropdown {
+    border-radius: 12px;
+    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    background-color: var(--bs-body-bg);
+}
+
+.navbar-search-dropdown .dropdown-item {
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.navbar-search-dropdown .dropdown-item:hover {
+    background-color: var(--bs-tertiary-bg);
+    transform: translateX(2px);
+}
