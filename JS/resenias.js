@@ -1,29 +1,26 @@
 (() => {
-    // Clave que identifica las reseñas guardadas y eliminadas en el almacenamiento del navegador.
-    const STORAGE_KEY = 'resenias-videojuegos';
     // Busca los elementos de la página que utiliza esta funcionalidad.
     const button = document.getElementById('mostrar-formulario-resenia');
     const form = document.getElementById('formulario-resenia');
     const modalElement = document.getElementById('modal-resenia');
     const reviewsList = document.getElementById('lista-resenias');
     const modalTitle = document.getElementById('modal-resenia-titulo');
-    const imageInput = document.getElementById('imagen-juego');
-    const imagePreview = document.getElementById('imagen-juego-preview');
-    const imageCrop = document.getElementById('imagen-juego-encuadre');
-    const imageHelp = document.getElementById('imagen-juego-ayuda');
     const nameInput = document.getElementById('nombre-juego');
+    const gameSuggestions = document.getElementById('juegos-coincidentes');
+    const selectedGamePreview = document.getElementById('juego-seleccionado');
+    const selectedGameImage = document.getElementById('juego-seleccionado-imagen');
+    const selectedGameName = document.getElementById('juego-seleccionado-nombre');
     const reviewInput = document.getElementById('texto-resenia');
     const ratingInputs = form
         ? Array.from(form.querySelectorAll('input[name="calificacion-nueva"]'))
         : [];
     const nameFeedback = document.getElementById('nombre-juego-feedback');
     const reviewFeedback = document.getElementById('texto-resenia-feedback');
-    const imageFeedback = document.getElementById('imagen-juego-feedback');
     const ratingFeedback = document.getElementById('calificacion-feedback');
     // Detiene la inicialización y avisa si falta alguna parte necesaria del HTML.
     if (!button || !form || !modalElement || !modalTitle || !reviewsList
-        || !imageInput || !imagePreview || !imageCrop || !imageHelp
-        || !nameInput || !reviewInput || !nameFeedback || !reviewFeedback || !imageFeedback
+        || !nameInput || !gameSuggestions || !selectedGamePreview || !selectedGameImage
+        || !selectedGameName || !reviewInput || !nameFeedback || !reviewFeedback
         || !ratingFeedback || ratingInputs.length === 0) {
         throw new Error('No se encontraron los elementos necesarios para agregar reseñas.');
     }
@@ -34,21 +31,15 @@
         throw new Error('No se encontró el botón para guardar la reseña.');
     }
 
-    // Recupera las reseñas previas; si los datos no se pueden leer, evita permitir
-    // nuevos registros para no reemplazar accidentalmente información guardada.
-    let savedReviews;
+    let savedReviews = [];
     let editingIndex = null; // Variable para controlar si estamos editando una reseña
     let imagePosition = { x: 50, y: 50 };
-    let previewObjectUrl = null;
-
-    try {
-        savedReviews = loadReviews();
-    } catch (error) {
-        console.error('No se pudieron cargar las reseñas guardadas.', error);
-        alert('No se pudieron cargar las reseñas guardadas. Revisa el almacenamiento del navegador.');
-        button.disabled = true;
-        return;
-    }
+    let catalogGames = [];
+    let selectedGame = null;
+    let catalogLoadError = '';
+    let catalogGamesPromise = null;
+    let catalogGamesLoaded = false;
+    let databaseReviewsError = '';
 
     // Renderiza las reseñas guardadas.
     function renderReviews() {
@@ -57,6 +48,13 @@
             const card = createReviewCard(review, index);
             reviewsList.appendChild(card);
         });
+        if (databaseReviewsError) {
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'alert alert-warning mb-0';
+            errorMessage.setAttribute('role', 'status');
+            errorMessage.textContent = databaseReviewsError;
+            reviewsList.appendChild(errorMessage);
+        }
         updateReviewOverflow();
         window.dispatchEvent(new CustomEvent('resenias:actualizadas', {
             detail: savedReviews
@@ -144,7 +142,7 @@
     window.addEventListener('load', updateReviewOverflow, { once: true });
 
     // Manejador de eventos para Eliminar y Editar
-    reviewsList.addEventListener('click', (event) => {
+    reviewsList.addEventListener('click', async (event) => {
         if (!(event.target instanceof Element)) {
             return;
         }
@@ -199,9 +197,7 @@
                     ? { ...review, likedBy: Array.from(likedBy) }
                     : review
             ));
-            if (!saveReviews(updatedReviews)) {
-                return;
-            }
+            savedReviews = updatedReviews;
             renderReviews();
             return;
         }
@@ -219,7 +215,7 @@
                 confirmButtonText: "Sí, eliminar",
                 cancelButtonText: "Cancelar",
                 reverseButtons: true
-            }).then((result) => {
+            }).then(async (result) => {
 
                 // Solo eliminar si el usuario confirma
                 if (!result.isConfirmed) {
@@ -246,13 +242,27 @@
                     return;
                 }
 
+                const reviewToDelete = savedReviews[reviewIndex];
+                try {
+                    if (Number.isInteger(reviewToDelete.databaseReviewId)) {
+                        await consumeApi(`/ludus/publicacion/${reviewToDelete.databaseReviewId}`, {
+                            method: "DELETE"
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: "Error",
+                        text: error instanceof Error ? error.message : "No se pudo eliminar la reseña del servidor.",
+                        icon: "error"
+                    });
+                    return;
+                }
+
                 const updatedReviews = savedReviews.filter(
                     (_, index) => index !== reviewIndex
                 );
 
-                if (!saveReviews(updatedReviews)) {
-                    return;
-                }
+                savedReviews = updatedReviews;
 
                 renderReviews();
                 return;
@@ -262,21 +272,22 @@
         }
         // ACCIÓN: EDITAR
         if (editButton) {
+            if (catalogGamesPromise) await catalogGamesPromise;
             const reviewIndex = Number(card.dataset.reviewIndex);
             const reviewToEdit = savedReviews[reviewIndex];
 
             if (!reviewToEdit) return;
 
             // Cargar datos en el formulario
-            form.querySelector('#nombre-juego').value = reviewToEdit.gameName;
+            selectedGame = catalogGames.find((game) =>
+                String(game.id) === String(reviewToEdit.gameId)
+                || game.name.trim().toLocaleLowerCase() === reviewToEdit.gameName.trim().toLocaleLowerCase()
+            ) || null;
+            nameInput.value = selectedGame ? selectedGame.name : reviewToEdit.gameName;
+            nameInput.disabled = Number.isInteger(reviewToEdit.databaseReviewId);
+            showSelectedGame(selectedGame);
             form.querySelector('#texto-resenia').value = reviewToEdit.reviewText;
-            imageInput.value = '';
-            imageInput.required = false;
-            imagePreview.src = reviewToEdit.imageSource;
             imagePosition = getImagePosition(reviewToEdit.imagePosition);
-            updateImagePosition();
-            imageCrop.hidden = false;
-            imageHelp.hidden = false;
 
             // Marcar la estrella correspondiente
             const ratingInput = form.querySelector(`input[name="calificacion-nueva"][value="${reviewToEdit.rating}"]`);
@@ -290,11 +301,6 @@
             reviewModal.show(editButton);
         }
     });
-
-    // Actualiza el encuadre mostrado en la vista previa con porcentajes persistibles.
-    function updateImagePosition() {
-        imagePreview.style.objectPosition = `${imagePosition.x}% ${imagePosition.y}%`;
-    }
 
     // Los datos anteriores que no tenían encuadre usan el centro de la imagen.
     function getImagePosition(position) {
@@ -312,140 +318,230 @@
         return { x: 50, y: 50 };
     }
 
-    // Libera la URL temporal que se usa para mostrar una imagen recién seleccionada.
-    function clearPreviewObjectUrl() {
-        if (previewObjectUrl) {
-            URL.revokeObjectURL(previewObjectUrl);
-            previewObjectUrl = null;
+    function showSelectedGame(game) {
+        selectedGamePreview.hidden = !game;
+        selectedGameName.textContent = game ? game.name : '';
+        const imageSource = game ? game.imageUrl : '';
+        selectedGameImage.hidden = true;
+        selectedGameImage.removeAttribute('src');
+        selectedGameImage.onload = null;
+        selectedGameImage.onerror = null;
+        if (isSafeImageSource(imageSource)) {
+            selectedGameImage.onload = () => {
+                selectedGameImage.hidden = false;
+            };
+            selectedGameImage.onerror = () => {
+                selectedGameImage.hidden = true;
+                selectedGameImage.removeAttribute('src');
+            };
+            selectedGameImage.src = imageSource;
+            selectedGameImage.alt = `Portada de ${game ? game.name : 'juego seleccionado'}`;
+        } else {
+            selectedGameImage.alt = '';
         }
     }
 
-    // Al cambiar de archivo, carga su vista previa y comienza con el encuadre centrado.
-    imageInput.addEventListener('change', () => {
-        const imageFile = imageInput.files[0];
-        if (!imageFile) {
-            return;
-        }
-
-        clearPreviewObjectUrl();
-        if (!imageFile.type.startsWith('image/')) {
-            imageCrop.hidden = true;
-            imageHelp.hidden = true;
-            imagePreview.removeAttribute('src');
-            return;
-        }
-
-        previewObjectUrl = URL.createObjectURL(imageFile);
-        imagePreview.src = previewObjectUrl;
-        imagePosition = { x: 50, y: 50 };
-        updateImagePosition();
-        imageCrop.hidden = false;
-        imageHelp.hidden = false;
-    });
-
-    // Permite arrastrar el recorte con mouse, lápiz o pantalla táctil.
-    let activeDrag = null;
-    imageCrop.addEventListener('pointerdown', (event) => {
-        if (!event.isPrimary || imagePreview.naturalWidth === 0) {
-            return;
-        }
-
-        const bounds = imageCrop.getBoundingClientRect();
-        const scale = Math.max(
-            bounds.width / imagePreview.naturalWidth,
-            bounds.height / imagePreview.naturalHeight
-        );
-
-        activeDrag = {
-            pointerId: event.pointerId,
-            startX: event.clientX,
-            startY: event.clientY,
-            startPosition: { ...imagePosition },
-            overflowX: Math.max(0, imagePreview.naturalWidth * scale - bounds.width),
-            overflowY: Math.max(0, imagePreview.naturalHeight * scale - bounds.height)
-        };
-        imageCrop.setPointerCapture(event.pointerId);
-        event.preventDefault();
-    });
-
-    imageCrop.addEventListener('pointermove', (event) => {
-        if (!activeDrag || activeDrag.pointerId !== event.pointerId) {
-            return;
-        }
-
-        imagePosition = {
-            x: activeDrag.overflowX
-                ? clampPosition(
-                    activeDrag.startPosition.x
-                    - ((event.clientX - activeDrag.startX) / activeDrag.overflowX) * 100
-                )
-                : activeDrag.startPosition.x,
-            y: activeDrag.overflowY
-                ? clampPosition(
-                    activeDrag.startPosition.y
-                    - ((event.clientY - activeDrag.startY) / activeDrag.overflowY) * 100
-                )
-                : activeDrag.startPosition.y
-        };
-        updateImagePosition();
-    });
-
-    function clampPosition(position) {
-        return Math.min(100, Math.max(0, position));
-    }
-
-    function finishImageDrag(event) {
-        if (activeDrag?.pointerId === event.pointerId) {
-            activeDrag = null;
+    function isSafeImageSource(value) {
+        if (typeof value !== 'string') return false;
+        if (value.startsWith('data:image/')) return true;
+        try {
+            return ['http:', 'https:'].includes(new URL(value, window.location.href).protocol);
+        } catch (error) {
+            return false;
         }
     }
 
-    imageCrop.addEventListener('pointerup', finishImageDrag);
-    imageCrop.addEventListener('pointercancel', finishImageDrag);
-    imageCrop.addEventListener('lostpointercapture', finishImageDrag);
-
-    // Las flechas permiten ajustar el encuadre sin arrastrar con el puntero.
-    imageCrop.addEventListener('keydown', (event) => {
-        const step = event.shiftKey ? 10 : 2;
-        const direction = {
-            ArrowLeft: { x: step, y: 0 },
-            ArrowRight: { x: -step, y: 0 },
-            ArrowUp: { x: 0, y: step },
-            ArrowDown: { x: 0, y: -step }
-        }[event.key];
-
-        if (!direction) {
+    function renderGameSuggestions(query = '') {
+        const normalizedQuery = query.trim().toLocaleLowerCase();
+        if (!normalizedQuery) {
+            gameSuggestions.replaceChildren();
+            gameSuggestions.hidden = true;
+            nameInput.setAttribute('aria-expanded', 'false');
             return;
         }
+        const matches = catalogGames.filter((game) =>
+            game.name.toLocaleLowerCase().includes(normalizedQuery)
+            || game.platform.toLocaleLowerCase().includes(normalizedQuery)
+        ).slice(0, 20);
+        gameSuggestions.replaceChildren();
+        matches.forEach((game) => {
+            const option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'list-group-item list-group-item-action';
+            option.setAttribute('role', 'option');
+            option.textContent = [game.name, game.platform].filter(Boolean).join(' · ');
+            option.addEventListener('click', () => {
+                selectedGame = game;
+                nameInput.value = game.name;
+                nameInput.classList.remove('is-invalid');
+                nameInput.classList.add('is-valid');
+                gameSuggestions.hidden = true;
+                nameInput.setAttribute('aria-expanded', 'false');
+                showSelectedGame(game);
+            });
+            gameSuggestions.appendChild(option);
+        });
+        if (!matches.length && normalizedQuery) {
+            const emptyOption = document.createElement('div');
+            emptyOption.className = 'list-group-item text-body-secondary';
+            emptyOption.textContent = 'No se encontraron juegos.';
+            gameSuggestions.appendChild(emptyOption);
+        }
+        gameSuggestions.hidden = matches.length === 0 && !normalizedQuery;
+        nameInput.setAttribute('aria-expanded', String(!gameSuggestions.hidden));
+    }
 
-        event.preventDefault();
-        imagePosition = {
-            x: clampPosition(imagePosition.x + direction.x),
-            y: clampPosition(imagePosition.y + direction.y)
-        };
-        updateImagePosition();
+    async function loadCatalogGames() {
+        nameInput.disabled = true;
+        nameInput.placeholder = 'Cargando juegos...';
+        nameFeedback.textContent = 'Cargando juegos del catálogo...';
+        nameFeedback.classList.add('d-block');
+        try {
+            const response = await consumeApi('/ludus/juego/');
+            if (!Array.isArray(response)) {
+                throw new Error('El servidor devolvió un catálogo de juegos no válido.');
+            }
+            catalogGames = response.map((game) => {
+                if (!game || !Number.isInteger(game.id_juego)
+                    || typeof game.nombre_juego !== 'string'
+                    || typeof game.imagen_url !== 'string'
+                    || typeof game.plataforma !== 'string') {
+                    throw new Error('El servidor devolvió un juego con datos incompletos.');
+                }
+                return {
+                    id: game.id_juego,
+                    name: game.nombre_juego,
+                    imageUrl: game.imagen_url,
+                    platform: game.plataforma
+                };
+            });
+            savedReviews = savedReviews.map((review) => {
+                const game = catalogGames.find((item) =>
+                    String(item.id) === String(review.gameId)
+                    || item.name.trim().toLocaleLowerCase() === review.gameName.trim().toLocaleLowerCase()
+                );
+                return game
+                    ? { ...review, gameId: String(game.id), imageSource: game.imageUrl }
+                    : review;
+            });
+            catalogLoadError = '';
+            catalogGamesLoaded = true;
+            nameInput.placeholder = 'Escribe para buscar un juego';
+            nameInput.disabled = false;
+            nameFeedback.textContent = '';
+            nameFeedback.classList.remove('d-block');
+
+            try {
+                const [user, publications] = await Promise.all([
+                    getCurrentUserDetails(),
+                    consumeApi('/ludus/publicacion/')
+                ]);
+                if (!user || !Array.isArray(publications)) {
+                    throw new Error('No se pudieron cargar las reseñas publicadas en Juegos.');
+                }
+
+                const userReviews = publications
+                    .filter((review) => review && review.id_usuario === user.id_usuario)
+                    .map((review) => {
+                        if (!Number.isInteger(review.id_resenia) || !Number.isInteger(review.id_juego)
+                            || typeof review.calificacion !== 'number'
+                            || !Number.isFinite(review.calificacion)
+                            || typeof review.texto_resenia !== 'string') {
+                            throw new Error('El servidor devolvió una reseña con datos incompletos.');
+                        }
+                        const game = catalogGames.find((item) => item.id === review.id_juego);
+                        return {
+                            id: review.id_resenia,
+                            databaseReviewId: review.id_resenia,
+                            databaseSourced: true,
+                            gameId: String(review.id_juego),
+                            gameName: game ? game.name : 'Juego no disponible',
+                            reviewText: review.texto_resenia,
+                            imageSource: game ? game.imageUrl : '',
+                            rating: review.calificacion,
+                            createdAt: review.fecha_publicacion,
+                            likedBy: [],
+                            legacyLikeCount: 0
+                        };
+                    });
+                userReviews.forEach((review) => {
+                    if (savedReviews.some((savedReview) =>
+                        savedReview.databaseReviewId === review.databaseReviewId
+                    )) {
+                        return;
+                    }
+                    const matchingLocalReview = savedReviews.find((savedReview) =>
+                        !savedReview.databaseReviewId
+                        && String(savedReview.gameId) === review.gameId
+                        && savedReview.rating === review.rating
+                        && savedReview.reviewText.trim().toLocaleLowerCase()
+                            === review.reviewText.trim().toLocaleLowerCase()
+                    );
+                    if (matchingLocalReview) {
+                        matchingLocalReview.databaseReviewId = review.databaseReviewId;
+                        matchingLocalReview.createdAt = review.createdAt;
+                        matchingLocalReview.imageSource = review.imageSource || matchingLocalReview.imageSource;
+                        return;
+                    }
+                    const duplicate = savedReviews.some((savedReview) =>
+                        String(savedReview.gameId) === review.gameId
+                        && savedReview.rating === review.rating
+                        && savedReview.reviewText.trim().toLocaleLowerCase()
+                            === review.reviewText.trim().toLocaleLowerCase()
+                    );
+                    if (!duplicate) savedReviews.push(review);
+                });
+                databaseReviewsError = '';
+            } catch (error) {
+                databaseReviewsError = error instanceof Error
+                    ? `No se pudieron cargar algunas reseñas del servidor: ${error.message}`
+                    : 'No se pudieron cargar algunas reseñas del servidor.';
+            }
+            renderReviews();
+        } catch (error) {
+            catalogLoadError = error instanceof Error
+                ? error.message
+                : 'No se pudo cargar el catálogo de juegos.';
+            nameInput.placeholder = 'Catálogo no disponible';
+            nameFeedback.textContent = catalogLoadError;
+            nameFeedback.classList.add('d-block');
+        }
+    }
+
+    nameInput.addEventListener('focus', () => {
+        if (!nameInput.disabled) renderGameSuggestions(nameInput.value);
+    });
+
+    nameInput.addEventListener('input', () => {
+        selectedGame = null;
+        showSelectedGame(null);
+        nameInput.classList.remove('is-valid', 'is-invalid');
+        renderGameSuggestions(nameInput.value);
     });
 
     function resetForm() {
         form.reset();
-        clearPreviewObjectUrl();
-        imageInput.required = true;
-        imagePreview.removeAttribute('src');
-        imageCrop.hidden = true;
-        imageHelp.hidden = true;
+        nameInput.disabled = !catalogGamesLoaded;
+        nameInput.setAttribute('aria-expanded', 'false');
+        gameSuggestions.hidden = true;
+        showSelectedGame(null);
+        selectedGame = null;
         imagePosition = { x: 50, y: 50 };
-        activeDrag = null;
         // Al reiniciar el formulario, dejamos de editar una reseña existente.
         editingIndex = null;
         // Quitamos los estilos Bootstrap que indican campos válidos o inválidos.
-        [nameInput, reviewInput, imageInput, ...ratingInputs].forEach((input) => {
+        [nameInput, reviewInput, ...ratingInputs].forEach((input) => {
             input.classList.remove('is-invalid', 'is-valid');
         });
         // Borramos los mensajes de validación y ocultamos sus contenedores.
-        [nameFeedback, reviewFeedback, imageFeedback, ratingFeedback].forEach((feedback) => {
+        [nameFeedback, reviewFeedback, ratingFeedback].forEach((feedback) => {
             feedback.textContent = '';
             feedback.classList.remove('d-block');
         });
+        if (catalogLoadError) {
+            nameFeedback.textContent = catalogLoadError;
+            nameFeedback.classList.add('d-block');
+        }
         form.querySelectorAll('.rate .star').forEach((star) => {
             star.classList.remove('fas', 'rate-active', 'star-over');
             star.classList.add('far');
@@ -460,6 +556,7 @@
         resetForm();
         modalTitle.textContent = 'Escribe una reseña';
         submitButton.textContent = 'Publicar reseña';
+        submitButton.disabled = false;
         button.setAttribute('aria-expanded', 'false');
     });
 
@@ -470,29 +567,24 @@
     });
 
     // Procesa el formulario (Crear o Actualizar)
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const gameName = form.querySelector('#nombre-juego').value.trim();
+        const gameName = selectedGame ? selectedGame.name : '';
         const reviewText = form.querySelector('#texto-resenia').value.trim();
-        const imageFile = imageInput.files[0];
         const ratingInput = form.querySelector('input[name="calificacion-nueva"]:checked');
         let isValid = true;
 
-        [nameInput, reviewInput, imageInput, ...ratingInputs].forEach((input) => {
+        [nameInput, reviewInput, ...ratingInputs].forEach((input) => {
             input.classList.remove('is-invalid', 'is-valid');
         });
-        [nameFeedback, reviewFeedback, imageFeedback, ratingFeedback].forEach((feedback) => {
+        [nameFeedback, reviewFeedback, ratingFeedback].forEach((feedback) => {
             feedback.textContent = '';
             feedback.classList.remove('d-block');
         });
 
-        if (gameName.length < 3 || gameName.length > 50) {
-            nameFeedback.textContent = gameName
-                ? (gameName.length < 3
-                    ? 'El nombre del videojuego es muy corto (mínimo 3 caracteres).'
-                    : 'El nombre del videojuego no puede superar los 100 caracteres.')
-                : 'El nombre del videojuego no puede estar vacío.';
+        if (!selectedGame || !isSafeImageSource(selectedGame.imageUrl)) {
+            nameFeedback.textContent = 'Selecciona un juego del catálogo con una portada válida.';
             nameInput.classList.add('is-invalid');
             isValid = false;
         } else {
@@ -509,18 +601,6 @@
             reviewInput.classList.add('is-valid');
         }
 
-        if (!imageFile && editingIndex === null) {
-            imageFeedback.textContent = 'Selecciona una imagen para la portada del videojuego.';
-            imageInput.classList.add('is-invalid');
-            isValid = false;
-        } else if (imageFile && !imageFile.type.startsWith('image/')) {
-            imageFeedback.textContent = 'Selecciona un archivo de imagen válido.';
-            imageInput.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            imageInput.classList.add('is-valid');
-        }
-
         if (!ratingInput) {
             ratingFeedback.textContent = 'Selecciona una calificación.';
             ratingFeedback.classList.add('d-block');
@@ -535,160 +615,103 @@
             return;
         }
 
+        submitButton.disabled = true;
         const rating = Number(ratingInput.value);
 
-        // Si estamos editando y no seleccionamos nueva imagen, mantenemos la anterior
-        if (editingIndex !== null && !imageFile) {
-            const updatedReview = {
-                ...savedReviews[editingIndex],
-                gameName,
-                reviewText,
-                imageSource: savedReviews[editingIndex].imageSource,
-                imagePosition: { ...imagePosition },
-                rating
-            };
+        const updatedReview = {
+            ...(editingIndex === null
+                ? { likedBy: [], legacyLikeCount: 0 }
+                : savedReviews[editingIndex]),
+            databaseSourced: true,
+            gameId: selectedGame.id,
+            gameName,
+            reviewText,
+            imageSource: selectedGame.imageUrl,
+            imagePosition: { ...imagePosition },
+            rating
+        };
 
-            savedReviews[editingIndex] = updatedReview;
-            if (!saveReviews(savedReviews)) return;
-
-            renderReviews();
-            reviewModal.hide();
+        try {
+            if (editingIndex === null) {
+                updatedReview.databaseReviewId = await createDatabaseReview(selectedGame, rating, reviewText);
+            } else {
+                await updateDatabaseReview(updatedReview, gameName, rating, reviewText);
+            }
+        } catch (error) {
+            Swal.fire({
+                title: "Error",
+                text: error instanceof Error ? error.message : "No se pudo guardar la reseña.",
+                icon: "error"
+            });
+            submitButton.disabled = false;
             return;
         }
 
-        // Si es creación o se seleccionó una nueva imagen
-        const reader = new FileReader();
-        reader.addEventListener('load', () => {
-            if (typeof reader.result !== 'string') {
-                alert('No se pudo cargar la imagen seleccionada.');
-                return;
-            }
+        if (editingIndex !== null) {
+            savedReviews[editingIndex] = updatedReview;
+        } else {
+            savedReviews.push(updatedReview);
+        }
 
-            const newReviewData = {
-                ...(editingIndex === null
-                    ? { likedBy: [], legacyLikeCount: 0 }
-                    : savedReviews[editingIndex]),
-                gameName,
-                reviewText,
-                imageSource: reader.result,
-                imagePosition: { ...imagePosition },
-                rating
-            };
-
-            if (editingIndex !== null) {
-                // Actualizar existente con nueva imagen
-                savedReviews[editingIndex] = newReviewData;
-            } else {
-                // Crear nueva reseña
-                savedReviews.push(newReviewData);
-            }
-
-            if (!saveReviews(savedReviews)) {
-                return;
-            }
-
-            renderReviews();
-            reviewModal.hide();
-        });
-
-        reader.addEventListener('error', () => {
-            alert('No se pudo leer la imagen seleccionada.');
-        });
-        reader.readAsDataURL(imageFile);
+        renderReviews();
+        reviewModal.hide();
     });
 
-    function loadReviews() {
-        const storedReviews = localStorage.getItem(STORAGE_KEY);
-        if (storedReviews === null) {
-            return [];
+    async function createDatabaseReview(game, rating, reviewText) {
+        const user = await getCurrentUserDetails();
+        if (!user) {
+            requireAuth();
+            throw new Error('Inicia sesión para publicar una reseña.');
         }
-        const reviews = JSON.parse(storedReviews);
-        if (!Array.isArray(reviews) || !reviews.every(isValidReview)) {
-            throw new Error('El formato de las reseñas guardadas no es válido.');
+        if (!Number.isInteger(game.id)) {
+            throw new Error('Selecciona un juego válido del catálogo.');
         }
-        return reviews.map(normalizeReviewLikes);
+
+        const createdReview = await consumeApi('/ludus/publicacion/', {
+            method: 'POST',
+            body: {
+                id_usuario: user.id_usuario,
+                id_juego: game.id,
+                calificacion: rating,
+                texto_resenia: reviewText,
+                fecha_publicacion: formatLocalDateTime()
+            }
+        });
+        if (!createdReview || !Number.isInteger(createdReview.id_resenia)) {
+            throw new Error('El servidor no confirmó la creación de la reseña.');
+        }
+        return createdReview.id_resenia;
     }
 
-    function normalizeReviewLikes(review) {
-        const likedBy = Array.isArray(review.likedBy)
-            ? Array.from(new Set(
-                review.likedBy
-                    .filter((email) => typeof email === 'string' && email.trim())
-                    .map((email) => email.trim().toLowerCase())
-            ))
-            : [];
-        const legacyLikeCount = Number.isSafeInteger(review.legacyLikeCount)
-            && review.legacyLikeCount >= 0
-            ? review.legacyLikeCount
-            : Number.isSafeInteger(review.likes) && review.likes >= 0
-                ? review.likes
-                : 0;
-
-        return { ...review, likedBy, legacyLikeCount };
-    }
-
-    function isValidReview(review) {
-        return review !== null
-            && typeof review === 'object'
-            && typeof review.gameName === 'string'
-            && typeof review.reviewText === 'string'
-            && typeof review.imageSource === 'string'
-            && review.imageSource.startsWith('data:image/')
-            && Number.isInteger(review.rating)
-            && review.rating >= 1
-            && review.rating <= 5
-            // comprobar la posición de una imagen dentro de la tarjeta.
-            && (
-                review.imagePosition === undefined
-                || (
-                    review.imagePosition !== null
-                    && typeof review.imagePosition === 'object'
-                    && Number.isFinite(review.imagePosition.x)
-                    && review.imagePosition.x >= 0
-                    && review.imagePosition.x <= 100
-                    && Number.isFinite(review.imagePosition.y)
-                    && review.imagePosition.y >= 0
-                    && review.imagePosition.y <= 100
-                )
-            );
-    }
-
-    function saveReviews(updatedReviews) {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedReviews));
-            console.log('Cambios guardados en localStorage:', JSON.stringify(updatedReviews));
-            let response = consumeApi("/ludus/resenia/", {
-                method: "POST",
-                auth: true,
-                body: JSON.stringify({
-                    "id_usuario": getCurrentUser()?.id_usuario || 0,
-                    "id_juego": updatedReviews[updatedReviews.length - 1].id_juego || 0,
-                    "calificacion": updatedReviews[updatedReviews.length - 1].rating,
-                    "texto_resenia": updatedReviews[updatedReviews.length - 1].reviewText,
-                    "fecha_publicacion": new Date().toISOString(),
-                })
-            });
-        } catch (error) {
-            console.error('No se pudieron guardar los cambios en localStorage.', error);
-            alert('No se pudieron guardar los cambios. Revisa el almacenamiento del navegador.');
-            return false;
+    async function updateDatabaseReview(review, gameName, rating, reviewText) {
+        if (!Number.isInteger(review.databaseReviewId)) return;
+        if (gameName.trim().toLocaleLowerCase() !== review.gameName.trim().toLocaleLowerCase()) {
+            throw new Error('No puedes cambiar el juego de una reseña ya publicada.');
         }
-        savedReviews = updatedReviews;
-        return true;
+
+        const params = new URLSearchParams({
+            calificacion: String(rating),
+            texto_resenia: reviewText
+        });
+        await consumeApi(`/ludus/publicacion/${review.databaseReviewId}?${params}`, {
+            method: 'PUT'
+        });
     }
 
     function createReviewCard(reviewData, reviewIndex) {
         const {
+            gameId,
             gameName,
             reviewText,
             imageSource,
             imagePosition: savedImagePosition,
             rating,
             likedBy,
-            legacyLikeCount
+            legacyLikeCount,
+            createdAt
         } = reviewData;
         const article = document.createElement('article');
-        article.className = 'card tarjeta-juego';
+        article.className = 'card tarjeta-juego tarjeta-juego--compact';
         article.dataset.reviewIndex = String(reviewIndex);
 
         // Contenedor de botones de acción
@@ -742,16 +765,30 @@
         row.className = 'row g-0 tarjeta-juego__fila';
 
         const imageColumn = document.createElement('div');
-        imageColumn.className = 'col-md-4 tarjeta-juego__imagen';
+        imageColumn.className = 'col-4 col-md-3 tarjeta-juego__imagen';
         const image = document.createElement('img');
-        image.src = imageSource;
+        if (isSafeImageSource(imageSource)) {
+            image.src = imageSource;
+            image.addEventListener('error', () => {
+                imageColumn.replaceChildren();
+                const fallback = document.createElement('i');
+                fallback.className = 'bi bi-controller';
+                fallback.setAttribute('aria-hidden', 'true');
+                imageColumn.appendChild(fallback);
+            }, { once: true });
+            imageColumn.appendChild(image);
+        } else {
+            const fallback = document.createElement('i');
+            fallback.className = 'bi bi-controller';
+            fallback.setAttribute('aria-hidden', 'true');
+            imageColumn.appendChild(fallback);
+        }
         image.alt = `Portada de ${gameName}`;
         const cardImagePosition = getImagePosition(savedImagePosition);
         image.style.objectPosition = `${cardImagePosition.x}% ${cardImagePosition.y}%`;
-        imageColumn.appendChild(image);
 
         const contentColumn = document.createElement('div');
-        contentColumn.className = 'col-md-8 tarjeta-juego__contenido';
+        contentColumn.className = 'col-8 col-md-9 tarjeta-juego__contenido';
 
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body tarjeta-juego__cuerpo';
@@ -761,7 +798,14 @@
 
         const title = document.createElement('h5');
         title.className = 'card-title';
-        title.textContent = gameName;
+        if (gameId !== undefined && gameId !== null && String(gameId)) {
+            const gameLink = document.createElement('a');
+            gameLink.href = `./juegos.html?id=${encodeURIComponent(gameId)}`;
+            gameLink.textContent = gameName;
+            title.appendChild(gameLink);
+        } else {
+            title.textContent = gameName;
+        }
 
         const review = document.createElement('p');
         review.className = 'card-text tarjeta-juego__texto-resenia';
@@ -779,8 +823,11 @@
         const note = document.createElement('p');
         note.className = 'card-text';
         const noteText = document.createElement('small');
-        noteText.className = 'text-body-secondary';
-        noteText.textContent = 'Tu reseña.';
+        noteText.className = 'text-body-secondary review-date';
+        const reviewDate = createdAt ? new Date(createdAt) : null;
+        noteText.textContent = reviewDate && !Number.isNaN(reviewDate.getTime())
+            ? reviewDate.toLocaleDateString('es-MX')
+            : 'Tu reseña.';
         note.appendChild(noteText);
 
         description.append(title, review, expandButton, note);
@@ -839,4 +886,5 @@
 
     // Inicializar renderizado de reseñas guardadas al cargar
     renderReviews();
+    catalogGamesPromise = loadCatalogGames();
 })();

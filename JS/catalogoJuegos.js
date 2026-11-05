@@ -1,5 +1,4 @@
 (() => {
-  const REVIEWS_KEY = "ludus_catalogo_resenias";
   const listSection = document.getElementById("game-browser");
   const listElement = document.getElementById("game-list");
   const searchInput = document.getElementById("game-search");
@@ -8,23 +7,7 @@
   const noResultsElement = document.getElementById("game-no-results");
   const detailElement = document.getElementById("game-detail");
   let games = [];
-
-  function readReviews() {
-    const saved = localStorage.getItem(REVIEWS_KEY);
-    if (saved === null) return [];
-
-    const parsed = JSON.parse(saved);
-    if (!Array.isArray(parsed)) {
-      throw new Error(`Los datos guardados en ${REVIEWS_KEY} no tienen un formato válido.`);
-    }
-    return parsed;
-  }
-
-  function getReviews() {
-    return readReviews().filter((review) =>
-      review && typeof review.gameId === "string" && Number.isInteger(review.rating)
-    );
-  }
+  let reviews = [];
 
   async function loadGames() {
     const response = await consumeApi("/ludus/juego/");
@@ -53,19 +36,40 @@
     });
   }
 
-  function saveReviews(reviews) {
-    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+  async function loadReviews() {
+    const [response, users] = await Promise.all([
+      consumeApi("/ludus/publicacion/"),
+      getApiUsers()
+    ]);
+    if (!Array.isArray(response)) {
+      throw new Error("El servidor devolvió una lista de reseñas no válida.");
+    }
+
+    return response.map((review) => {
+      if (!review || !Number.isInteger(review.id_resenia)
+        || !Number.isInteger(review.id_usuario) || !Number.isInteger(review.id_juego)
+        || typeof review.calificacion !== "number"
+        || !Number.isFinite(review.calificacion)
+        || typeof review.texto_resenia !== "string"
+        || typeof review.fecha_publicacion !== "string") {
+        throw new Error("El servidor devolvió una reseña con datos incompletos.");
+      }
+
+      const user = users.find((item) => item && item.id_usuario === review.id_usuario);
+      return {
+        id: String(review.id_resenia),
+        gameId: String(review.id_juego),
+        userName: user && typeof user.nombre === "string" ? user.nombre : "Jugador",
+        rating: review.calificacion,
+        text: review.texto_resenia,
+        createdAt: review.fecha_publicacion
+      };
+    });
   }
 
   function getAverageRating(reviews) {
     if (!reviews.length) return null;
     return reviews.reduce((total, review) => total + review.rating, 0) / reviews.length;
-  }
-
-  function makeId() {
-    return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
 
   function addText(parent, tag, text, className) {
@@ -124,7 +128,6 @@
     emptyElement.classList.toggle("d-none", games.length > 0);
     noResultsElement.classList.toggle("d-none", games.length === 0 || filteredGames.length > 0);
 
-    const allReviews = getReviews();
     filteredGames.forEach((game) => {
       const column = document.createElement("div");
       column.className = "col";
@@ -136,11 +139,11 @@
       addText(body, "h3", game.name, "h5 card-title fw-bold");
       addText(body, "p", [game.category, game.platform].filter(Boolean).join(" · ") || "Videojuego",
         "small text-body-secondary mb-3");
-      const reviews = allReviews.filter((review) => review.gameId === game.id);
-      const average = getAverageRating(reviews);
+      const gameReviews = reviews.filter((review) => review.gameId === game.id);
+      const average = getAverageRating(gameReviews);
       addText(body, "p", average === null ? "Sin calificaciones" : `Calificación ${average.toFixed(1)} / 5`,
         "small fw-semibold text-success mb-2");
-      addText(body, "p", `${reviews.length} ${reviews.length === 1 ? "reseña" : "reseñas"}`,
+      addText(body, "p", `${gameReviews.length} ${gameReviews.length === 1 ? "reseña" : "reseñas"}`,
         "small text-body-secondary mt-auto");
       const link = document.createElement("a");
       link.className = "btn btn-outline-primary";
@@ -163,8 +166,10 @@
     const content = document.createElement("div");
     content.className = "flex-grow-1";
     addText(content, "h3", review.userName || "Jugador", "h6 fw-bold mb-1");
-    addText(content, "p", new Date(review.createdAt).toLocaleDateString("es-MX"),
-      "small text-body-secondary mb-2");
+    const createdAt = new Date(review.createdAt);
+    addText(content, "p", Number.isNaN(createdAt.getTime())
+      ? "Fecha desconocida"
+      : createdAt.toLocaleDateString("es-MX"), "small text-body-secondary mb-2");
     addText(content, "p", review.text, "mb-0 text-break");
     header.appendChild(content);
     article.appendChild(header);
@@ -172,8 +177,8 @@
   }
 
   function renderDetail(game) {
-    const reviews = getReviews().filter((review) => review.gameId === game.id);
-    const average = getAverageRating(reviews);
+    const gameReviews = reviews.filter((review) => review.gameId === game.id);
+    const average = getAverageRating(gameReviews);
     detailElement.replaceChildren();
 
     const back = document.createElement("a");
@@ -191,7 +196,7 @@
     const metadata = [game.category, game.platform].filter(Boolean).join(" · ");
     if (metadata) addText(info, "p", metadata, "lead text-body-secondary");
     if (game.description) addText(info, "p", game.description, "text-body-secondary");
-    addText(info, "p", `${reviews.length} ${reviews.length === 1 ? "reseña" : "reseñas"} de la comunidad`,
+    addText(info, "p", `${gameReviews.length} ${gameReviews.length === 1 ? "reseña" : "reseñas"} de la comunidad`,
       "small text-body-secondary mb-0");
     addText(info, "p", average === null ? "Sin calificaciones aún" : `Calificación de la comunidad: ${average.toFixed(1)} / 5`,
       "fw-semibold text-success mt-3 mb-0");
@@ -203,8 +208,8 @@
     const reviewColumn = document.createElement("div");
     reviewColumn.className = "col-lg-7";
     addText(reviewColumn, "h2", "Reseñas de jugadores", "h3 fw-bold mb-3");
-    if (reviews.length) {
-      reviews.slice().reverse().forEach((review) => reviewColumn.appendChild(renderReview(review)));
+    if (gameReviews.length) {
+      gameReviews.slice().reverse().forEach((review) => reviewColumn.appendChild(renderReview(review)));
     } else {
       addText(reviewColumn, "p", "Este juego aún no tiene reseñas. Puedes ser el primero.",
         "text-body-secondary p-4 border rounded-3");
@@ -257,12 +262,11 @@
     submit.className = "btn btn-primary w-100";
     submit.textContent = "Publicar reseña";
     form.appendChild(submit);
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       formMessage.className = "alert d-none";
 
-      const currentUser = getCurrentUser();
-      if (!currentUser) {
+      if (!getCurrentUser()) {
         sessionStorage.setItem("ludus_redirect_after_login", `${window.location.pathname.split("/").pop()}${window.location.search}`);
         requireAuth();
         return;
@@ -275,24 +279,44 @@
         return;
       }
 
+      submit.disabled = true;
       try {
-        const allReviews = getReviews();
-        allReviews.push({
-          id: makeId(),
-          gameId: game.id,
-          userEmail: currentUser.email,
-          userName: currentUser.name || currentUser.email,
-          rating: Number(ratingSelect.value),
-          text,
-          createdAt: new Date().toISOString()
+        const currentUser = await getCurrentUserDetails();
+        if (!currentUser) {
+          requireAuth();
+          return;
+        }
+
+        const publication = {
+          id_usuario: currentUser.id_usuario,
+          id_juego: Number(game.id),
+          calificacion: Number(ratingSelect.value),
+          texto_resenia: text,
+          fecha_publicacion: formatLocalDateTime()
+        };
+        const createdReview = await consumeApi("/ludus/publicacion/", {
+          method: "POST",
+          body: publication
         });
-        saveReviews(allReviews);
+
+        reviews.push({
+          id: String(createdReview && Number.isInteger(createdReview.id_resenia)
+            ? createdReview.id_resenia
+            : Date.now()),
+          gameId: String(publication.id_juego),
+          userName: currentUser.name,
+          rating: publication.calificacion,
+          text: publication.texto_resenia,
+          createdAt: publication.fecha_publicacion
+        });
         renderDetail(game);
+        renderCatalog();
       } catch (error) {
         formMessage.textContent = error instanceof Error
           ? error.message
-          : "No se pudo guardar la reseña en este navegador.";
+          : "No se pudo publicar la reseña.";
         formMessage.className = "alert alert-danger";
+        submit.disabled = false;
       }
     });
 
@@ -308,7 +332,7 @@
   async function initializeCatalog() {
     countElement.textContent = "Cargando juegos...";
     try {
-      games = await loadGames();
+      [games, reviews] = await Promise.all([loadGames(), loadReviews()]);
       const gameId = new URLSearchParams(window.location.search).get("id");
       if (gameId) {
         const game = games.find((item) => item.id === gameId);
