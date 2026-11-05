@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
     // Clave que identifica las reseñas guardadas y eliminadas en el almacenamiento del navegador.
     const STORAGE_KEY = 'resenias-videojuegos';
     // Busca los elementos de la página que utiliza esta funcionalidad.
@@ -170,17 +170,17 @@
             return;
         }
 
-        // ACCIÓN: ELIMINAR
+        // ACCIí“N: ELIMINAR
         if (deleteButton) {
             const gameName =
                 card.querySelector('.card-title')?.textContent.trim() || 'este juego';
 
             Swal.fire({
                 title: "Eliminar",
-                text: `¿Estás seguro que quieres eliminar ${gameName}?`,
+                text: `Â¿Estás seguro que quieres eliminar ${gameName}?`,
                 icon: "question",
                 showCancelButton: true,
-                confirmButtonText: "Sí, eliminar",
+                confirmButtonText: "Sí­, eliminar",
                 cancelButtonText: "Cancelar",
                 reverseButtons: true
             }).then((result) => {
@@ -224,7 +224,7 @@
 
             return;
         }
-        // ACCIÓN: EDITAR
+        // ACCIí“N: EDITAR
         if (editButton) {
             const reviewIndex = Number(card.dataset.reviewIndex);
             const reviewToEdit = savedReviews[reviewIndex];
@@ -248,7 +248,7 @@
                 ratingInput.checked = true;
             }
 
-            editingIndex = reviewIndex; // Guardamos el índice que estamos editando
+            editingIndex = reviewIndex; // Guardamos el í­ndice que estamos editando
             modalTitle.textContent = 'Editar reseña';
             submitButton.textContent = 'Guardar cambios';
             reviewModal.show(editButton);
@@ -260,7 +260,7 @@
         imagePreview.style.objectPosition = `${imagePosition.x}% ${imagePosition.y}%`;
     }
 
-    // Los datos anteriores que no tenían encuadre usan el centro de la imagen.
+    // Los datos anteriores que no tení­an encuadre usan el centro de la imagen.
     function getImagePosition(position) {
         if (
             position &&
@@ -454,9 +454,9 @@
         if (gameName.length < 3 || gameName.length > 50) {
             nameFeedback.textContent = gameName
                 ? (gameName.length < 3
-                    ? 'El nombre del videojuego es muy corto (mínimo 3 caracteres).'
+                    ? 'El nombre del videojuego es muy corto (mí­nimo 3 caracteres).'
                     : 'El nombre del videojuego no puede superar los 100 caracteres.')
-                : 'El nombre del videojuego no puede estar vacío.';
+                : 'El nombre del videojuego no puede estar vací­o.';
             nameInput.classList.add('is-invalid');
             isValid = false;
         } else {
@@ -466,7 +466,7 @@
         if (!reviewText || reviewText.length > 10000) {
             reviewFeedback.textContent = reviewText
                 ? 'La reseña no puede superar los 10000 caracteres.'
-                : 'El campo reseña no puede estar vacío.';
+                : 'El campo reseña no puede estar vací­o.';
             reviewInput.classList.add('is-invalid');
             isValid = false;
         } else {
@@ -641,7 +641,15 @@
         deleteIcon.setAttribute('aria-hidden', 'true');
         deleteButton.appendChild(deleteIcon);
 
-        actionsContainer.append(editButton, deleteButton);
+                // Si estamos viendo el perfil de otro usuario, solo mostramos Me gusta (sin editar ni eliminar)
+        const urlParams = new URLSearchParams(window.location.search);
+        const idEnUrl = urlParams.get('id');
+        const idPropio = sessionStorage.getItem('ludus_id_usuario');
+        const esOtroPerfil = idEnUrl && idEnUrl !== idPropio;
+
+        if (!esOtroPerfil) {
+            actionsContainer.append(editButton, deleteButton);
+        }
         article.appendChild(actionsContainer);
 
         const row = document.createElement('div');
