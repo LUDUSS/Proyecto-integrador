@@ -236,11 +236,18 @@
                         </div>
                         <div class="modal-body">
 
-                            <!-- Campo para el nombre del videojuego. -->
+                            <!-- Busca y selecciona un juego existente en el catálogo. -->
                             <div class="mb-3">
-                                <label for="nombre-juego" class="form-label">Nombre del videojuego</label>
-                                <input id="nombre-juego" name="nombreJuego" class="form-control" type="text">
+                                <label for="nombre-juego" class="form-label">Busca un juego</label>
+                                <input id="nombre-juego" name="nombreJuego" class="form-control" type="search"
+                                    autocomplete="off" aria-controls="juegos-coincidentes" aria-expanded="false">
                                 <div class="invalid-feedback" id="nombre-juego-feedback"></div>
+                                <div id="juegos-coincidentes" class="list-group mt-2" role="listbox" hidden></div>
+                                <div id="juego-seleccionado" class="d-flex align-items-center gap-3 mt-3" hidden>
+                                    <img id="juego-seleccionado-imagen" class="rounded object-fit-cover"
+                                        width="72" height="96" alt="">
+                                    <span id="juego-seleccionado-nombre" class="fw-semibold"></span>
+                                </div>
                             </div>
 
                             <!-- Campo para escribir la opinión. -->
@@ -249,23 +256,6 @@
                                 <textarea id="texto-resenia" name="textoResenia" class="form-control"
                                     rows="4"></textarea>
                                 <div class="invalid-feedback" id="texto-resenia-feedback"></div>
-                            </div>
-
-                            <!-- Selector que permite adjuntar una imagen para la tarjeta. -->
-                            <div class="mb-3">
-                                <label for="imagen-juego" class="form-label">Foto del videojuego</label>
-                                <input id="imagen-juego" name="imagenJuego" class="form-control" type="file"
-                                    accept="image/*">
-                                <div class="invalid-feedback" id="imagen-juego-feedback"></div>
-                                <div id="imagen-juego-encuadre" class="imagen-encuadre mt-2" tabindex="0" role="group"
-                                    aria-label="Ajuste del encuadre de la imagen" aria-describedby="imagen-juego-ayuda"
-                                    hidden>
-                                    <img id="imagen-juego-preview"
-                                        alt="Vista previa de la imagen; arrástrala para ajustar el encuadre">
-                                </div>
-                                <small id="imagen-juego-ayuda" class="form-text text-body-secondary" hidden>
-                                    Arrastra la imagen para ajustar el encuadre.
-                                </small>
                             </div>
 
                             <!-- Grupo de estrellas; se debe seleccionar una calificación del 1 al 5. -->
