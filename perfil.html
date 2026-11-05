@@ -319,10 +319,19 @@
                                 aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
+
+                            <!-- Busca y selecciona un juego existente en el catálogo. -->
                             <div class="mb-3">
-                                <label for="nombre-juego" class="form-label">Nombre del videojuego</label>
-                                <input id="nombre-juego" name="nombreJuego" class="form-control" type="text">
+                                <label for="nombre-juego" class="form-label">Busca un juego</label>
+                                <input id="nombre-juego" name="nombreJuego" class="form-control" type="search"
+                                    autocomplete="off" aria-controls="juegos-coincidentes" aria-expanded="false">
                                 <div class="invalid-feedback" id="nombre-juego-feedback"></div>
+                                <div id="juegos-coincidentes" class="list-group mt-2" role="listbox" hidden></div>
+                                <div id="juego-seleccionado" class="d-flex align-items-center gap-3 mt-3" hidden>
+                                    <img id="juego-seleccionado-imagen" class="rounded object-fit-cover"
+                                        width="72" height="96" alt="">
+                                    <span id="juego-seleccionado-nombre" class="fw-semibold"></span>
+                                </div>
                             </div>
 
                             <div class="mb-3">

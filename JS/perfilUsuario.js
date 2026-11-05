@@ -1,6 +1,5 @@
 ﻿(() => {
     const PROFILE_STORAGE_KEY = 'perfil-usuario';
-    const REVIEWS_STORAGE_KEY = 'resenias-videojuegos';
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
     const ABOUT_ICONS = [
         { name: 'bi-controller', label: 'Control de videojuego' },
@@ -63,6 +62,7 @@
     const averageRating = document.getElementById('perfil-promedio-calificacion');
     const reviewedGames = document.getElementById('perfil-juegos-resenados');
     const nombreUsuario = document.getElementById('nombre-usuario');
+    let localReviews = [];
 
     if (
         !alias || !aliasInput || !description || !descriptionInput || !aboutIcon
@@ -663,12 +663,16 @@
 
     window.addEventListener('resenias:actualizadas', (event) => {
         try {
-            updateStatistics(event.detail);
+            if (!Array.isArray(event.detail)) {
+                throw new Error('El formato de las reseñas actualizadas no es válido.');
+            }
+            localReviews = event.detail;
+            updateStatistics(localReviews);
         } catch (error) {
             console.error('No se pudieron actualizar las estadí­sticas del perfil.', error);
             message.textContent = 'No se pudieron actualizar las estadí­sticas de tus reseñas.';
         }
     });
 
-    loadReviewStatistics();
+    updateStatistics(localReviews);
 })();

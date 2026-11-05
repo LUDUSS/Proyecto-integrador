@@ -6,6 +6,7 @@ const LUDUS_SESSION_KEY = "ludus_session";
 const LUDUS_TOKEN_KEY = "ludus_access_token";
 const LUDUS_TOKEN_EXPIRY_KEY = "ludus_access_token_expiry";
 const LUDUS_TOKEN_TTL_MS = 3 * 60 * 60 * 1000;
+let ludusApiUsersPromise = null;
 
 function getUsers() {
   try {
@@ -26,6 +27,44 @@ function getCurrentUser() {
   return user
     ? { name: user.name, email: user.email }
     : { name: email, email };
+}
+
+async function getApiUsers() {
+  if (!ludusApiUsersPromise) {
+    ludusApiUsersPromise = consumeApi("/ludus/usuario/")
+      .then((users) => {
+        if (!Array.isArray(users)) {
+          throw new Error("El servidor devolvió una lista de usuarios no válida.");
+        }
+        return users;
+      })
+      .catch((error) => {
+        ludusApiUsersPromise = null;
+        throw error;
+      });
+  }
+
+  return ludusApiUsersPromise;
+}
+
+async function getCurrentUserDetails() {
+  const currentUser = getCurrentUser();
+  if (!currentUser) return null;
+
+  const users = await getApiUsers();
+  const user = users.find((item) =>
+    item && typeof item.correo === "string"
+    && item.correo.trim().toLowerCase() === currentUser.email
+  );
+  if (!user || !Number.isInteger(user.id_usuario)) {
+    throw new Error("No se encontró el ID de tu cuenta para publicar la reseña.");
+  }
+
+  return {
+    id_usuario: user.id_usuario,
+    name: typeof user.nombre === "string" ? user.nombre : currentUser.name,
+    email: currentUser.email
+  };
 }
 
 function isLoggedIn() {

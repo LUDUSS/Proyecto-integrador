@@ -1,5 +1,11 @@
 const API_BASE_URL = "http://localhost:8080";
 
+function formatLocalDateTime(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+    + `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 async function consumeApi(endpoint, { method = "GET", body, auth = true } = {}) {
   if (typeof endpoint !== "string" || !endpoint.startsWith("/")) {
     throw new Error("El endpoint debe ser una ruta que comience con '/'.");
