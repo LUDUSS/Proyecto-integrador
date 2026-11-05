@@ -1,230 +1,237 @@
 
- // ==========================================
- // 1. ELEMENTOS HTML
- // ==========================================
+// ==========================================
+// 1. ELEMENTOS HTML
+// ==========================================
 
- // Contraseña
- const passwordInput = document.getElementById("password");
- const togglePassword = document.getElementById("togglePassword");
- const passwordRules = document.getElementById("password-rules");
+// Contraseña
+const passwordInput = document.getElementById("password");
+const togglePassword = document.getElementById("togglePassword");
+const passwordRules = document.getElementById("password-rules");
 
- // Confirmar contraseña
- const confirmPasswordInput = document.getElementById("confirm-password");
- const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
- const confirmStatus = document.getElementById("confirm-status");
- const confirmIcon = document.getElementById("confirm-icon");
+// Confirmar contraseña
+const confirmPasswordInput = document.getElementById("confirm-password");
+const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
+const confirmStatus = document.getElementById("confirm-status");
+const confirmIcon = document.getElementById("confirm-icon");
 
- // Formulario
- const registerForm = document.getElementById("register-form");
- const message = document.getElementById("form-message");
+// Formulario
+const registerForm = document.getElementById("register-form");
+const message = document.getElementById("form-message");
 
- // Reglas de contraseña
- const reglaMayuscula = document.getElementById("rule-upper");
- const reglaMinuscula = document.getElementById("rule-lower");
- const reglaNumero = document.getElementById("rule-number");
- const reglaCarEspecial = document.getElementById("rule-special");
- const reglaCaracteres = document.getElementById("rule-length");
+// Reglas de contraseña
+const reglaMayuscula = document.getElementById("rule-upper");
+const reglaMinuscula = document.getElementById("rule-lower");
+const reglaNumero = document.getElementById("rule-number");
+const reglaCarEspecial = document.getElementById("rule-special");
+const reglaCaracteres = document.getElementById("rule-length");
 
- // Iconos
- const iconoMayuscula = reglaMayuscula.querySelector("i");
- const iconoMinuscula = reglaMinuscula.querySelector("i");
- const iconoNumero = reglaNumero.querySelector("i");
- const iconoCarEspecial = reglaCarEspecial.querySelector("i");
- const iconoCaracteres = reglaCaracteres.querySelector("i");
+// Iconos
+const iconoMayuscula = reglaMayuscula.querySelector("i");
+const iconoMinuscula = reglaMinuscula.querySelector("i");
+const iconoNumero = reglaNumero.querySelector("i");
+const iconoCarEspecial = reglaCarEspecial.querySelector("i");
+const iconoCaracteres = reglaCaracteres.querySelector("i");
 
 
- // ==========================================
- // 2. MOSTRAR Y OCULTAR CONTRASEÑAS
- // ==========================================
+// ==========================================
+// 2. MOSTRAR Y OCULTAR CONTRASEÑAS
+// ==========================================
 
- function configurarVisibilidad(input, boton) {
+function configurarVisibilidad(input, boton) {
 
-   boton.addEventListener("click", () => {
+  boton.addEventListener("click", () => {
 
-     const icono = boton.querySelector("i");
+    const icono = boton.querySelector("i");
 
-     if (input.type === "password") {
-       input.type = "text";
-       icono.className = "bi bi-eye-slash";
+    if (input.type === "password") {
+      input.type = "text";
+      icono.className = "bi bi-eye-slash";
 
-       boton.setAttribute("aria-label", "Ocultar contraseña");
-       boton.setAttribute("aria-pressed", "true");
+      boton.setAttribute("aria-label", "Ocultar contraseña");
+      boton.setAttribute("aria-pressed", "true");
 
-     } else {
-       ocultarPassword(input, boton);
-     }
+    } else {
+      ocultarPassword(input, boton);
+    }
 
-   });
- }
+  });
+}
 
- function ocultarPassword(input, boton) {
+function ocultarPassword(input, boton) {
 
-   input.type = "password";
+  input.type = "password";
 
-   const icono = boton.querySelector("i");
-   icono.className = "bi bi-eye";
+  const icono = boton.querySelector("i");
+  icono.className = "bi bi-eye";
 
-   boton.setAttribute("aria-label", "Mostrar contraseña");
-   boton.setAttribute("aria-pressed", "false");
- }
+  boton.setAttribute("aria-label", "Mostrar contraseña");
+  boton.setAttribute("aria-pressed", "false");
+}
 
- configurarVisibilidad(passwordInput, togglePassword);
- configurarVisibilidad(confirmPasswordInput, toggleConfirmPassword);
+configurarVisibilidad(passwordInput, togglePassword);
+configurarVisibilidad(confirmPasswordInput, toggleConfirmPassword);
 
 
- // ==========================================
- // 3. VALIDACIONES VISUALES
- // ==========================================
+// ==========================================
+// 3. VALIDACIONES VISUALES
+// ==========================================
 
- function actualizarValidacion(icono, cumple) {
+function actualizarValidacion(icono, cumple) {
 
-   if (cumple) {
-     icono.className = "bi bi-check-circle-fill text-success";
-   } else {
-     icono.className = "bi bi-x-circle-fill text-danger";
-   }
+  if (cumple) {
+    icono.className = "bi bi-check-circle-fill text-success";
+  } else {
+    icono.className = "bi bi-x-circle-fill text-danger";
+  }
 
- }
+}
 
- function validacionPasswordVisual() {
+function validacionPasswordVisual() {
 
-   const password = passwordInput.value;
+  const password = passwordInput.value;
 
-   const regexMayuscula = /[A-Z]/;
-   const regexMinuscula = /[a-z]/;
-   const regexNumero = /[0-9]/;
-   const regexCarEspecial = /[!@#$%^&*?_-]/;
+  const regexMayuscula = /[A-Z]/;
+  const regexMinuscula = /[a-z]/;
+  const regexNumero = /[0-9]/;
+  const regexCarEspecial = /[!@#$%^&*?_-]/;
 
-   actualizarValidacion(
-     iconoMayuscula,
-     regexMayuscula.test(password)
-   );
+  actualizarValidacion(
+    iconoMayuscula,
+    regexMayuscula.test(password)
+  );
 
-   actualizarValidacion(
-     iconoMinuscula,
-     regexMinuscula.test(password)
-   );
+  actualizarValidacion(
+    iconoMinuscula,
+    regexMinuscula.test(password)
+  );
 
-   actualizarValidacion(
-     iconoNumero,
-     regexNumero.test(password)
-   );
+  actualizarValidacion(
+    iconoNumero,
+    regexNumero.test(password)
+  );
 
-   actualizarValidacion(
-     iconoCarEspecial,
-     regexCarEspecial.test(password)
-   );
+  actualizarValidacion(
+    iconoCarEspecial,
+    regexCarEspecial.test(password)
+  );
 
-   actualizarValidacion(
-     iconoCaracteres,
-     password.length >= 8
-   );
- }
+  actualizarValidacion(
+    iconoCaracteres,
+    password.length >= 8
+  );
+}
 
 
- // ==========================================
- // 4. CONFIRMAR CONTRASEÑA
- // ==========================================
+// ==========================================
+// 4. CONFIRMAR CONTRASEÑA
+// ==========================================
 
- function validarConfirmacion() {
+function validarConfirmacion() {
 
-   const password = passwordInput.value;
-   const confirmPassword = confirmPasswordInput.value;
+  const password = passwordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
 
-   // No mostrar iconos si la confirmación está vacía
-   if (confirmPassword.length === 0) {
-     confirmStatus.classList.add("d-none");
-     return;
-   }
+  // No mostrar iconos si la confirmación está vacía
+  if (confirmPassword.length === 0) {
+    confirmStatus.classList.add("d-none");
+    return;
+  }
 
-   confirmStatus.classList.remove("d-none");
+  confirmStatus.classList.remove("d-none");
 
-   if (password === confirmPassword) {
-     confirmIcon.className = "bi bi-check-circle-fill text-success";
-   } else {
-     confirmIcon.className = "bi bi-x-circle-fill text-danger";
-   }
+  if (password === confirmPassword) {
+    confirmIcon.className = "bi bi-check-circle-fill text-success";
+  } else {
+    confirmIcon.className = "bi bi-x-circle-fill text-danger";
+  }
 
- }
+}
 
 
- // ==========================================
- // 5. EVENTOS
- // ==========================================
+// ==========================================
+// 5. EVENTOS
+// ==========================================
 
- // Mostrar globo
- passwordInput.addEventListener("focus", () => {
-   passwordRules.classList.add("show");
- });
+// Mostrar globo
+passwordInput.addEventListener("focus", () => {
+  passwordRules.classList.add("show");
+});
 
- // Ocultar globo
- passwordInput.addEventListener("blur", () => {
-   passwordRules.classList.remove("show");
- });
+// Ocultar globo
+passwordInput.addEventListener("blur", () => {
+  passwordRules.classList.remove("show");
+});
 
- // Validaciones mientras se escribe
- passwordInput.addEventListener("input", validacionPasswordVisual);
+// Validaciones mientras se escribe
+passwordInput.addEventListener("input", validacionPasswordVisual);
 
- // Comparar contraseñas mientras se escribe
- passwordInput.addEventListener("input", validarConfirmacion);
- confirmPasswordInput.addEventListener("input", validarConfirmacion);
+// Comparar contraseñas mientras se escribe
+passwordInput.addEventListener("input", validarConfirmacion);
+confirmPasswordInput.addEventListener("input", validarConfirmacion);
 
 
- // ==========================================
- // 6. REGISTRO DE USUARIO
- // ==========================================
+// ==========================================
+// 6. REGISTRO DE USUARIO
+// ==========================================
 
- registerForm.addEventListener("submit", (event) => {
+registerForm.addEventListener("submit", async (event) => {
 
-   event.preventDefault();
-   message.className = "alert d-none";
+  event.preventDefault();
+  message.className = "alert d-none";
+  const submitButton = registerForm.querySelector('button[type="submit"]');
 
-   const password = passwordInput.value;
-   const confirmPassword = confirmPasswordInput.value;
+  const password = passwordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
 
-   // Comprobar coincidencia
-   if (password !== confirmPassword) {
+  // Comprobar coincidencia
+  if (password !== confirmPassword) {
 
-     message.textContent = "Las contraseñas no coinciden.";
-     message.className = "alert alert-danger";
+    message.textContent = "Las contraseñas no coinciden.";
+    message.className = "alert alert-danger";
 
-     return;
-   }
+    return;
+  }
 
-   try {
+  submitButton.disabled = true;
 
-     registerUser({
-       name: registerForm.elements.namedItem("name").value,
-       telefono: registerForm.elements.namedItem("telefono").value,
-       email: registerForm.elements.namedItem("email").value,
-       password
-     });
+  try {
 
-     // Registro exitoso
-     message.textContent =
-       "Cuenta creada. Ahora inicia sesión con tu correo y contraseña.";
+    await registerUser({
+      name: registerForm.elements.namedItem("name").value,
+      telefono: registerForm.elements.namedItem("telefono").value,
+      email: registerForm.elements.namedItem("email").value,
+      password
+    });
 
-     message.className = "alert alert-success";
+    // Registro exitoso
+    message.textContent =
+      "Cuenta creada. Ahora inicia sesión con tu correo y contraseña.";
 
-     // Limpiar formulario
-     registerForm.reset();
+    message.className = "alert alert-success";
 
-     // Reiniciar validaciones
-     validacionPasswordVisual();
-     validarConfirmacion();
+    // Limpiar formulario
+    registerForm.reset();
 
-     // Ocultar globo
-     passwordRules.classList.remove("show");
+    // Reiniciar validaciones
+    validacionPasswordVisual();
+    validarConfirmacion();
 
-     // Restaurar los dos ojos
-     ocultarPassword(passwordInput, togglePassword);
-     ocultarPassword(confirmPasswordInput, toggleConfirmPassword);
+    // Ocultar globo
+    passwordRules.classList.remove("show");
 
-   } catch (error) {
+    // Restaurar los dos ojos
+    ocultarPassword(passwordInput, togglePassword);
+    ocultarPassword(confirmPasswordInput, toggleConfirmPassword);
 
-     message.textContent = error.message;
-     message.className = "alert alert-danger";
+  } catch (error) {
 
-   }
+    message.textContent = error instanceof Error
+      ? error.message
+      : "No se pudo crear la cuenta. Inténtalo de nuevo.";
+    message.className = "alert alert-danger";
 
- });
+  } finally {
+    submitButton.disabled = false;
+  }
+
+});

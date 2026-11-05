@@ -20,7 +20,7 @@ if (navbar) {
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav mx-auto align-items-center gap-3 mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link" href="./index.html">Inicio</a></li>
-            ${currentUser ? '<li class="nav-item"><a class="nav-link text-nowrap">Juegos</a></li>' : ''}
+            ${currentUser ? '<li class="nav-item"><a class="nav-link text-nowrap" href="./juegos.html">Juegos</a></li>' : ''}
             <li class="nav-item"><a class="nav-link" href="./contactanos.html">Contáctanos</a></li>
             <li class="nav-item"><a class="nav-link" href="./acercade.html">Acerca de nosotros</a></li>
             ${currentUser ? '<li class="nav-item"><a class="nav-link" href="./perfil.html">Mi perfil</a></li>' : ''}
