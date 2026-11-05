@@ -59,7 +59,7 @@
     const coverHelp = document.getElementById('perfil-portada-ayuda');
     const message = document.getElementById('perfil-mensaje');
     const editError = document.getElementById('perfil-edicion-error');
-    const totalReviews = document.getElementById('perfil-total-resenias');
+    const totalLikes = document.getElementById('perfil-total-likes');
     const averageRating = document.getElementById('perfil-promedio-calificacion');
     const reviewedGames = document.getElementById('perfil-juegos-resenados');
     const nombreUsuario = document.getElementById('nombre-usuario');
@@ -70,7 +70,7 @@
         || !editModalElement || !avatarInput || !avatarImage || !avatarPlaceholder
         || !avatarPresets || !avatarCrop || !avatarCropImage || !avatarHelp
         || !coverInput || !coverImage || !coverCrop || !coverCropImage || !coverHelp
-        || !message || !editError || !totalReviews || !averageRating
+        || !message || !editError || !totalLikes || !averageRating
         || !reviewedGames || !nombreUsuario
     ) {
         throw new Error('No se encontraron los elementos necesarios para mostrar el perfil.');
@@ -633,8 +633,18 @@
             validReviews.map((review) => review.gameName.trim().toLocaleLowerCase()).filter(Boolean)
         );
         const ratingTotal = validReviews.reduce((total, review) => total + review.rating, 0);
+        const likesTotal = validReviews.reduce((total, review) => {
+            const likedBy = Array.isArray(review.likedBy) ? new Set(review.likedBy) : new Set();
+            const legacyLikes = Number.isSafeInteger(review.legacyLikeCount)
+                && review.legacyLikeCount >= 0
+                ? review.legacyLikeCount
+                : Number.isSafeInteger(review.likes) && review.likes >= 0
+                    ? review.likes
+                    : 0;
+            return total + legacyLikes + likedBy.size;
+        }, 0);
 
-        totalReviews.textContent = String(validReviews.length);
+        totalLikes.textContent = String(likesTotal);
         averageRating.textContent = validReviews.length
             ? (ratingTotal / validReviews.length).toFixed(1)
             : 'â€”';

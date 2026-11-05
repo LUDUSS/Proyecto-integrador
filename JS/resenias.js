@@ -151,6 +151,7 @@
 
         const deleteButton = event.target.closest('.btn-accion.eliminar');
         const editButton = event.target.closest('.btn-accion.editar');
+        const likeButton = event.target.closest('.btn-accion.like');
         const expandButton = event.target.closest('.tarjeta-juego__ver-mas');
         const card = event.target.closest('.tarjeta-juego');
 
@@ -167,6 +168,41 @@
             const isExpanded = reviewText.classList.toggle('is-expanded');
             expandButton.textContent = isExpanded ? 'Ver menos' : 'Ver más';
             expandButton.setAttribute('aria-expanded', String(isExpanded));
+            return;
+        }
+
+        // ACCIÓN: LIKE
+        if (likeButton) {
+            const reviewIndex = Number(card.dataset.reviewIndex);
+            const reviewToLike = savedReviews[reviewIndex];
+            const currentUser = getCurrentUser();
+
+            if (!reviewToLike) {
+                return;
+            }
+
+            if (!currentUser) {
+                requireAuth();
+                return;
+            }
+
+            const userEmail = currentUser.email.trim().toLowerCase();
+            const likedBy = new Set(reviewToLike.likedBy);
+            if (likedBy.has(userEmail)) {
+                likedBy.delete(userEmail);
+            } else {
+                likedBy.add(userEmail);
+            }
+
+            const updatedReviews = savedReviews.map((review, index) => (
+                index === reviewIndex
+                    ? { ...review, likedBy: Array.from(likedBy) }
+                    : review
+            ));
+            if (!saveReviews(updatedReviews)) {
+                return;
+            }
+            renderReviews();
             return;
         }
 
@@ -341,13 +377,13 @@
             x: activeDrag.overflowX
                 ? clampPosition(
                     activeDrag.startPosition.x
-                        - ((event.clientX - activeDrag.startX) / activeDrag.overflowX) * 100
+                    - ((event.clientX - activeDrag.startX) / activeDrag.overflowX) * 100
                 )
                 : activeDrag.startPosition.x,
             y: activeDrag.overflowY
                 ? clampPosition(
                     activeDrag.startPosition.y
-                        - ((event.clientY - activeDrag.startY) / activeDrag.overflowY) * 100
+                    - ((event.clientY - activeDrag.startY) / activeDrag.overflowY) * 100
                 )
                 : activeDrag.startPosition.y
         };
@@ -504,6 +540,7 @@
         // Si estamos editando y no seleccionamos nueva imagen, mantenemos la anterior
         if (editingIndex !== null && !imageFile) {
             const updatedReview = {
+                ...savedReviews[editingIndex],
                 gameName,
                 reviewText,
                 imageSource: savedReviews[editingIndex].imageSource,
@@ -528,6 +565,9 @@
             }
 
             const newReviewData = {
+                ...(editingIndex === null
+                    ? { likedBy: [], legacyLikeCount: 0 }
+                    : savedReviews[editingIndex]),
                 gameName,
                 reviewText,
                 imageSource: reader.result,
@@ -566,7 +606,25 @@
         if (!Array.isArray(reviews) || !reviews.every(isValidReview)) {
             throw new Error('El formato de las reseñas guardadas no es válido.');
         }
-        return reviews;
+        return reviews.map(normalizeReviewLikes);
+    }
+
+    function normalizeReviewLikes(review) {
+        const likedBy = Array.isArray(review.likedBy)
+            ? Array.from(new Set(
+                review.likedBy
+                    .filter((email) => typeof email === 'string' && email.trim())
+                    .map((email) => email.trim().toLowerCase())
+            ))
+            : [];
+        const legacyLikeCount = Number.isSafeInteger(review.legacyLikeCount)
+            && review.legacyLikeCount >= 0
+            ? review.legacyLikeCount
+            : Number.isSafeInteger(review.likes) && review.likes >= 0
+                ? review.likes
+                : 0;
+
+        return { ...review, likedBy, legacyLikeCount };
     }
 
     function isValidReview(review) {
@@ -598,6 +656,18 @@
     function saveReviews(updatedReviews) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedReviews));
+            console.log('Cambios guardados en localStorage:', JSON.stringify(updatedReviews));
+            let response = consumeApi("/ludus/resenia/", {
+                method: "POST",
+                auth: true,
+                body: JSON.stringify({
+                    "id_usuario": getCurrentUser()?.id_usuario || 0,
+                    "id_juego": updatedReviews[updatedReviews.length - 1].id_juego || 0,
+                    "calificacion": updatedReviews[updatedReviews.length - 1].rating,
+                    "texto_resenia": updatedReviews[updatedReviews.length - 1].reviewText,
+                    "fecha_publicacion": new Date().toISOString(),
+                })
+            });
         } catch (error) {
             console.error('No se pudieron guardar los cambios en localStorage.', error);
             alert('No se pudieron guardar los cambios. Revisa el almacenamiento del navegador.');
@@ -607,17 +677,41 @@
         return true;
     }
 
-    function createReviewCard(
-        { gameName, reviewText, imageSource, imagePosition: savedImagePosition, rating },
-        reviewIndex
-    ) {
+    function createReviewCard(reviewData, reviewIndex) {
+        const {
+            gameName,
+            reviewText,
+            imageSource,
+            imagePosition: savedImagePosition,
+            rating,
+            likedBy,
+            legacyLikeCount
+        } = reviewData;
         const article = document.createElement('article');
         article.className = 'card tarjeta-juego';
         article.dataset.reviewIndex = String(reviewIndex);
 
-        // Contenedor de botones de acción (Editar y Eliminar)
+        // Contenedor de botones de acción
         const actionsContainer = document.createElement('div');
         actionsContainer.className = 'tarjeta-acciones';
+
+        const currentUser = getCurrentUser();
+        const isLiked = currentUser
+            ? likedBy.includes(currentUser.email.trim().toLowerCase())
+            : false;
+        const likeCount = legacyLikeCount + likedBy.length;
+        const likeButton = document.createElement('button');
+        likeButton.type = 'button';
+        likeButton.className = `btn-accion like${isLiked ? ' is-liked' : ''}`;
+        likeButton.title = isLiked ? 'Quitar me gusta' : 'Me gusta';
+        likeButton.setAttribute('aria-label', `${likeCount} likes${isLiked ? ', te gusta' : ''}`);
+        likeButton.setAttribute('aria-pressed', String(isLiked));
+        const likeIcon = document.createElement('i');
+        likeIcon.className = `bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}`;
+        likeIcon.setAttribute('aria-hidden', 'true');
+        const likeCountLabel = document.createElement('span');
+        likeCountLabel.textContent = String(likeCount);
+        likeButton.append(likeIcon, likeCountLabel);
 
         // Botón Editar
         const editButton = document.createElement('button');

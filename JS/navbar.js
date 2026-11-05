@@ -21,7 +21,7 @@ if (navbar) {
         <div class="collapse navbar-collapse" id="navbarContent">
           <ul class="navbar-nav mx-auto align-items-center gap-2 mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link" href="./index.html">Inicio</a></li>
-            ${currentUser ? '<li class="nav-item"><a class="nav-link text-nowrap" href="./index.html#juegosDestacados">Juegos</a></li>' : ''}
+            ${currentUser ? '<li class="nav-item"><a class="nav-link text-nowrap" href="./juegos.html">Juegos</a></li>' : ''}
             <li class="nav-item"><a class="nav-link" href="./contactanos.html">Contáctanos</a></li>
             <li class="nav-item"><a class="nav-link" href="./acercade.html">Acerca de nosotros</a></li>
             ${currentUser ? '<li class="nav-item"><a class="nav-link" href="./perfil.html" id="nav-mi-perfil-link">Mi perfil</a></li>' : ''}
