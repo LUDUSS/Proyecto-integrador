@@ -647,7 +647,7 @@
         totalLikes.textContent = String(likesTotal);
         averageRating.textContent = validReviews.length
             ? (ratingTotal / validReviews.length).toFixed(1)
-            : 'â€”';
+            : '0';
         reviewedGames.textContent = String(gameNames.size);
     }
 
