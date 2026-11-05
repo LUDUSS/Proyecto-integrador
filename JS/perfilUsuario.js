@@ -1,10 +1,10 @@
-(() => {
+﻿(() => {
     const PROFILE_STORAGE_KEY = 'perfil-usuario';
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
     const ABOUT_ICONS = [
         { name: 'bi-controller', label: 'Control de videojuego' },
         { name: 'bi-joystick', label: 'Joystick' },
-        { name: 'bi-headset', label: 'Audífonos' },
+        { name: 'bi-headset', label: 'Audí­fonos' },
         { name: 'bi-trophy', label: 'Trofeo' },
         { name: 'bi-stars', label: 'Estrellas' }
     ];
@@ -151,6 +151,13 @@
     }
 
     function showProfile(profile) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idEnUrl = urlParams.get('id');
+        const idPropio = sessionStorage.getItem('ludus_id_usuario');
+        if (idEnUrl && idEnUrl !== idPropio) {
+            // No sobreescribir datos si estamos viendo el perfil de otro usuario
+            return;
+        }
         nombreUsuario.textContent = currentUser.name;
         alias.textContent = profile.alias || 'Jugador';
         description.textContent = profile.description || 'Aún no has agregado una descripción. Cuéntanos un poco sobre ti.';
@@ -614,7 +621,7 @@
 
     function updateStatistics(reviews) {
         if (!Array.isArray(reviews)) {
-            throw new Error('El formato de las reseñas para las estadísticas no es válido.');
+            throw new Error('El formato de las reseñas para las estadí­sticas no es válido.');
         }
 
         const validReviews = reviews.filter(
@@ -640,8 +647,18 @@
         totalLikes.textContent = String(likesTotal);
         averageRating.textContent = validReviews.length
             ? (ratingTotal / validReviews.length).toFixed(1)
-            : '—';
+            : '0';
         reviewedGames.textContent = String(gameNames.size);
+    }
+
+    function loadReviewStatistics() {
+        try {
+            const storedReviews = localStorage.getItem(REVIEWS_STORAGE_KEY);
+            updateStatistics(storedReviews === null ? [] : JSON.parse(storedReviews));
+        } catch (error) {
+            console.error('No se pudieron cargar las estadí­sticas de reseñas.', error);
+            message.textContent = 'No se pudieron cargar las estadí­sticas de tus reseñas.';
+        }
     }
 
     window.addEventListener('resenias:actualizadas', (event) => {
@@ -652,8 +669,8 @@
             localReviews = event.detail;
             updateStatistics(localReviews);
         } catch (error) {
-            console.error('No se pudieron actualizar las estadísticas del perfil.', error);
-            message.textContent = 'No se pudieron actualizar las estadísticas de tus reseñas.';
+            console.error('No se pudieron actualizar las estadí­sticas del perfil.', error);
+            message.textContent = 'No se pudieron actualizar las estadí­sticas de tus reseñas.';
         }
     });
 
