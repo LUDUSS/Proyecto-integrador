@@ -89,7 +89,7 @@ if (navbar) {
 
             <!-- Login / logout y Registro -->
             ${currentUser
-              ? `<span class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}</span>
+              ? `<span id="nav-greeting" class="small text-body-secondary d-none d-xl-inline">Hola</span>
                  <button id="auth-action" class="btn btn-login text-nowrap" type="button">Cerrar sesión</button>`
               : `<a class="btn btn-login text-nowrap" href="./login.html">Iniciar sesión</a>
                  <a class="btn btn-outline-secondary text-nowrap" href="./registro.html">Crear cuenta</a>`}
@@ -204,10 +204,16 @@ function inicializarBuscadorNavbar() {
  */
 async function sincronizarUsuarioBackend(currentUser) {
   try {
-    const resp = await fetch(`${API_URL}/usuario/correo/${encodeURIComponent(currentUser.email)}`);
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.id_usuario) {
+    const usuarios = await getApiUsers();
+    const correoActual = currentUser.email.trim().toLowerCase();
+    const data = usuarios.find((usuario) =>
+      usuario && typeof usuario.correo === "string"
+      && usuario.correo.trim().toLowerCase() === correoActual
+    );
+
+    if (data) {
+      actualizarSaludoNavbar(data.nombre, currentUser);
+      if (data.id_usuario) {
         sessionStorage.setItem("ludus_id_usuario", String(data.id_usuario));
         return data.id_usuario;
       }
@@ -232,6 +238,7 @@ async function sincronizarUsuarioBackend(currentUser) {
 
     if (regResp.ok) {
       const creado = await regResp.json();
+      actualizarSaludoNavbar(creado && creado.nombre, currentUser);
       if (creado && creado.id_usuario) {
         sessionStorage.setItem("ludus_id_usuario", String(creado.id_usuario));
         return creado.id_usuario;
@@ -241,6 +248,19 @@ async function sincronizarUsuarioBackend(currentUser) {
     console.warn("Aviso de sincronización con Spring Boot:", error);
   }
   return null;
+}
+
+function actualizarSaludoNavbar(nombre, currentUser) {
+  const saludo = document.getElementById("nav-greeting");
+  if (!saludo) return;
+
+  const correo = currentUser.email.trim().toLowerCase();
+  const nombreValido = [nombre, currentUser.name].find((candidato) =>
+    typeof candidato === "string"
+    && candidato.trim()
+    && candidato.trim().toLowerCase() !== correo
+  );
+  if (nombreValido) saludo.textContent = `Hola, ${nombreValido.trim()}`;
 }
 
 const boton = document.getElementById("registrate");
