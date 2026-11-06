@@ -1,6 +1,5 @@
-(() => {
-    const PROFILE_STORAGE_KEY = 'perfil-usuario';
-    const REVIEWS_STORAGE_KEY = 'resenias-videojuegos';
+(async () => {
+    let PROFILE_STORAGE_KEY = 'ludus_visual_profile';
     const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
     const ABOUT_ICONS = [
         { name: 'bi-controller', label: 'Control de videojuego' },
@@ -76,12 +75,22 @@
         throw new Error('No se encontraron los elementos necesarios para mostrar el perfil.');
     }
 
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-        requireAuth();
+    if (!isLoggedIn()) { requireAuth(); return; }
+    let serverProfile, owner;
+    const editButton = document.getElementById('editar-perfil');
+    editButton.disabled = true;
+    try {
+        const me = await Ludus.me();
+        serverProfile = await Ludus.profile();
+        owner = String(me.idUsuario) === String(serverProfile.idUsuario);
+        PROFILE_STORAGE_KEY += ':' + serverProfile.idUsuario;
+    } catch (error) {
+        message.textContent = Ludus.errorText(error);
+        message.appendChild(Ludus.button('Reintentar', () => location.reload()));
         return;
     }
-
+    editButton.hidden = !owner;
+    editButton.disabled = !owner;
     const editModal = bootstrap.Modal.getOrCreateInstance(editModalElement);
 
     function getImagePosition(position) {
@@ -96,11 +105,12 @@
     }
 
     function loadProfile() {
-        const storedProfile = localStorage.getItem(PROFILE_STORAGE_KEY);
+        // La clave histórica no identifica propietario: no asignarla a otra cuenta.
+        const storedProfile = owner ? localStorage.getItem(PROFILE_STORAGE_KEY) : null;
         if (storedProfile === null) {
             return {
-                alias: '',
-                description: '',
+                alias: serverProfile.nombre,
+                description: serverProfile.sobreMi || '',
                 aboutIcon: 'bi-controller',
                 'lines-color': DEFAULT_LINES_COLOR,
                 avatar: '',
@@ -122,8 +132,8 @@
         }
 
         return {
-            alias: profile.alias,
-            description: profile.description || '',
+            alias: serverProfile.nombre,
+            description: serverProfile.sobreMi || '',
             aboutIcon: ABOUT_ICONS.some((icon) => icon.name === profile.aboutIcon)
                 ? profile.aboutIcon
                 : 'bi-controller',
@@ -139,7 +149,8 @@
 
     function saveProfile(updatedProfile) {
         try {
-            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(updatedProfile));
+            const {alias, description, ...visual} = updatedProfile;
+            localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({...visual, alias: '', description: ''}));
             message.textContent = '';
             return true;
         } catch (error) {
@@ -151,7 +162,7 @@
     }
 
     function showProfile(profile) {
-        nombreUsuario.textContent = currentUser.name;
+        nombreUsuario.textContent = serverProfile.nombre;
         alias.textContent = profile.alias || 'Jugador';
         description.textContent = profile.description || 'Aún no has agregado una descripción. Cuéntanos un poco sobre ti.';
         aboutIcon.className = `bi ${profile.aboutIcon}`;
@@ -194,8 +205,8 @@
         console.error('No se pudo cargar el perfil guardado.', error);
         message.textContent = 'No se pudo cargar tu perfil guardado.';
         profile = {
-            alias: '',
-            description: '',
+            alias: serverProfile.nombre,
+            description: serverProfile.sobreMi || '',
             aboutIcon: 'bi-controller',
             'lines-color': DEFAULT_LINES_COLOR,
             avatar: '',
@@ -569,8 +580,10 @@
         updateSelectedLinesColor();
     });
 
+    let saving = false;
     editForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        if (!owner || saving) return;
         editError.textContent = '';
         editError.hidden = true;
 
@@ -582,6 +595,8 @@
         }
         aliasInput.classList.remove('is-invalid');
 
+        saving = true;
+        editForm.querySelector('[type=submit]').disabled = true;
         try {
             const [avatarFile, coverFile] = await Promise.all([
                 avatarSelection,
@@ -599,6 +614,8 @@
                 coverPosition
             };
 
+            await consumeApi('/ludus/perfil/me', {method:'PUT', body:{nombre:newAlias, sobreMi:updatedProfile.description}});
+            serverProfile = await Ludus.me(true);
             if (saveProfile(updatedProfile)) {
                 profile = updatedProfile;
                 showProfile(profile);
@@ -609,59 +626,26 @@
                 ? error.message
                 : 'No se pudieron procesar las imágenes seleccionadas.';
             editError.hidden = false;
+        } finally {
+            saving = false;
+            editForm.querySelector('[type=submit]').disabled = false;
         }
     });
 
-    function updateStatistics(reviews) {
-        if (!Array.isArray(reviews)) {
-            throw new Error('El formato de las reseñas para las estadísticas no es válido.');
-        }
-
-        const validReviews = reviews.filter(
-            (review) => review && typeof review.rating === 'number'
-                && Number.isFinite(review.rating) && review.rating >= 1 && review.rating <= 5
-                && typeof review.gameName === 'string'
-        );
-        const gameNames = new Set(
-            validReviews.map((review) => review.gameName.trim().toLocaleLowerCase()).filter(Boolean)
-        );
-        const ratingTotal = validReviews.reduce((total, review) => total + review.rating, 0);
-        const likesTotal = validReviews.reduce((total, review) => {
-            const likedBy = Array.isArray(review.likedBy) ? new Set(review.likedBy) : new Set();
-            const legacyLikes = Number.isSafeInteger(review.legacyLikeCount)
-                && review.legacyLikeCount >= 0
-                ? review.legacyLikeCount
-                : Number.isSafeInteger(review.likes) && review.likes >= 0
-                    ? review.likes
-                    : 0;
-            return total + legacyLikes + likedBy.size;
-        }, 0);
-
-        totalLikes.textContent = String(likesTotal);
-        averageRating.textContent = validReviews.length
-            ? (ratingTotal / validReviews.length).toFixed(1)
-            : '—';
-        reviewedGames.textContent = String(gameNames.size);
-    }
-
-    function loadReviewStatistics() {
+    async function refreshServerProfile() {
         try {
-            const storedReviews = localStorage.getItem(REVIEWS_STORAGE_KEY);
-            updateStatistics(storedReviews === null ? [] : JSON.parse(storedReviews));
-        } catch (error) {
-            console.error('No se pudieron cargar las estadísticas de reseñas.', error);
-            message.textContent = 'No se pudieron cargar las estadísticas de tus reseñas.';
-        }
+            serverProfile = await Ludus.profile();
+            profile.alias = serverProfile.nombre;
+            profile.description = serverProfile.sobreMi || '';
+            showProfile(profile);
+            totalLikes.textContent = serverProfile.totalLikes ?? '—';
+            averageRating.textContent = serverProfile.promedioCalificacion ?? '—';
+            reviewedGames.textContent = serverProfile.juegosResenados ?? '—';
+            reviewedGames.nextElementSibling.textContent = 'Juegos reseñados';
+            reviewedGames.title = `${serverProfile.juegosResenados ?? '—'} juegos reseñados`;
+            message.textContent = owner ? 'Avatar, portada, icono y colores se guardan sólo en este navegador; aún no se sincronizan.' : '';
+        } catch (error) { message.textContent = Ludus.errorText(error); }
     }
-
-    window.addEventListener('resenias:actualizadas', (event) => {
-        try {
-            updateStatistics(event.detail);
-        } catch (error) {
-            console.error('No se pudieron actualizar las estadísticas del perfil.', error);
-            message.textContent = 'No se pudieron actualizar las estadísticas de tus reseñas.';
-        }
-    });
-
-    loadReviewStatistics();
+    window.addEventListener('resenias:actualizadas', refreshServerProfile);
+    await refreshServerProfile();
 })();

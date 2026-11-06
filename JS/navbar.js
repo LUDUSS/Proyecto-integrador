@@ -72,8 +72,8 @@ if (navbar) {
   <!-- Login / logout -->
   ${currentUser
     ? `<span class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}</span>
-       <button id="auth-action" class="btn btn-login text-nowrap" type="button">Cerrar sesión</button>`
-    : '<a class="btn btn-login text-nowrap" href="./login.html">Iniciar sesión</a>'}
+       <button id="auth-action" class="btn btn-primary btn-login text-nowrap" type="button">Cerrar sesión</button>`
+    : '<a class="btn btn-primary btn-login text-nowrap" href="./login.html">Iniciar sesión</a>'}
 </div>
         </div>
       </div>
@@ -108,7 +108,7 @@ function escapeHtml(value) {
   boton.innerHTML = `
   <div class="d-flex gap-2">
             <a class="btn btn-primary px-4 py-2" href="#juegosDestacados">Explorar juegos</a>
-            ${currentUser ? '' : '<a id= "registrate" class="btn btn-outline-secondary px-4 py-2" href="./registro.html">Crear cuenta</a>'}
+            ${currentUser ? '' : '<a id= "registrate" class="btn ludus-btn ludus-btn--secondary px-4 py-2" href="./registro.html">Crear cuenta</a>'}
           </div>
         </div>
         `;}

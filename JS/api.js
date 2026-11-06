@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = (window.LUDUS_API_BASE_URL || "http://localhost:8080").replace(/\/$/, "");
 
 async function consumeApi(endpoint, { method = "GET", body, auth = true } = {}) {
   if (typeof endpoint !== "string" || !endpoint.startsWith("/")) {
@@ -10,7 +10,10 @@ async function consumeApi(endpoint, { method = "GET", body, auth = true } = {}) 
 
   if (auth) {
     const token = typeof getAuthToken === "function" ? getAuthToken() : null;
-    if (!token) throw new Error("Inicia sesión para consumir este servicio.");
+    if (!token) {
+      if (typeof requireAuth === "function") requireAuth();
+      throw Object.assign(new Error("Inicia sesión para continuar."), { status: 401 });
+    }
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -35,13 +38,14 @@ async function consumeApi(endpoint, { method = "GET", body, auth = true } = {}) 
 
   if (response.status === 401 && typeof clearAuthSession === "function") {
     clearAuthSession();
+    if (auth && typeof requireAuth === "function") requireAuth();
   }
 
   if (!response.ok) {
     const serverMessage = responseBody && typeof responseBody === "object"
       ? responseBody.message || responseBody.mensaje || responseBody.error
       : responseBody;
-    throw new Error(serverMessage || `Error HTTP ${response.status} al consumir ${endpoint}.`);
+    throw Object.assign(new Error(typeof serverMessage === "string" ? serverMessage : `Error HTTP ${response.status}.`), {status: response.status, retryAfter: response.headers.get("Retry-After")});
   }
 
   return responseBody;

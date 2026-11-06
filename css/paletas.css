@@ -131,20 +131,75 @@ p, small, span, li, a, div:not(.ludus-card-header) {
 }
 #identidad .card:hover i { transform: scale(1.1) rotate(5deg); }
 
-/* 8. BOTONES */
-.btn-primary {
-  --bs-btn-bg: transparent; --bs-btn-border-color: transparent;
-  --bs-btn-hover-bg: transparent; --bs-btn-hover-border-color: transparent;
-  --bs-btn-active-bg: transparent; --bs-btn-active-border-color: transparent;
-  background-image: var(--ludus-gradient);
-  border: none; color: #fff;
-  box-shadow: 0 4px 15px rgba(var(--ludus-primary-rgb), 0.4);
-  transition: all 0.3s ease;
+/* 8. ACCIONES: las paletas originales siguen siendo la única fuente de color.
+   El velo de contraste conserva el degradado activo y garantiza texto blanco legible.
+   Las clases ludus-review-btn son alias compatibles del componente compartido. */
+:root {
+  --ludus-action-gradient: linear-gradient(rgb(0 0 0 / .35), rgb(0 0 0 / .35)), var(--ludus-gradient);
+  --ludus-action-text: #fff;
+  --ludus-action-accent: color-mix(in srgb, var(--ludus-primary) 60%, #000);
+  --ludus-action-tint: color-mix(in srgb, var(--ludus-primary) 8%, var(--bs-body-bg));
+  --ludus-action-hover: color-mix(in srgb, var(--ludus-primary) 14%, var(--bs-body-bg));
+  --ludus-action-focus: var(--ludus-action-accent);
+  --ludus-action-danger: var(--bs-danger-text-emphasis);
+  --ludus-action-danger-tint: color-mix(in srgb, var(--bs-danger) 6%, var(--bs-body-bg));
 }
-.btn-primary:hover, .btn-primary:focus {
-  filter: brightness(1.1); color: #fff;
-  box-shadow: 0 6px 20px rgba(var(--ludus-primary-rgb), 0.6);
-  transform: translateY(-2px);
+[data-bs-theme="dark"] {
+  --ludus-action-accent: color-mix(in srgb, var(--ludus-primary) 55%, #fff);
+}
+:is(.btn-primary, .ludus-btn, .ludus-review-btn) {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  min-height: 40px; padding: .5rem .95rem; border-radius: .65rem;
+  font-family: inherit; font-size: .875rem; font-weight: 600; line-height: 1.3;
+  border: 1px solid transparent; text-decoration: none;
+  transition: box-shadow .15s ease, background-color .15s ease, transform .15s ease;
+}
+:is(.btn-primary, .ludus-btn--primary, .ludus-review-btn--primary) {
+  --bs-btn-color: var(--ludus-action-text);
+  --bs-btn-hover-color: var(--ludus-action-text);
+  --bs-btn-active-color: var(--ludus-action-text);
+  --bs-btn-disabled-color: var(--ludus-action-text);
+  color: var(--ludus-action-text); border-color: transparent;
+  background-image: var(--ludus-action-gradient);
+  background-color: var(--ludus-primary);
+  box-shadow: 0 3px 12px rgba(var(--ludus-primary-rgb), .2);
+}
+:is(.btn-primary, .ludus-btn--primary, .ludus-review-btn--primary):is(:hover, :active) {
+  color: var(--ludus-action-text); border-color: transparent;
+  background-image: var(--ludus-action-gradient); transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(var(--ludus-primary-rgb), .35);
+}
+:is(.ludus-btn--secondary, .ludus-review-btn--secondary) {
+  --bs-btn-color: var(--ludus-action-accent);
+  --bs-btn-hover-color: var(--ludus-action-accent);
+  --bs-btn-active-color: var(--ludus-action-accent);
+  --bs-btn-disabled-color: var(--ludus-action-accent);
+  color: var(--ludus-action-accent); border-color: var(--ludus-action-accent);
+  background: var(--ludus-action-tint);
+}
+:is(.ludus-btn--secondary, .ludus-review-btn--secondary):is(:hover, :active) {
+  color: var(--ludus-action-accent); border-color: var(--ludus-action-accent);
+  background: var(--ludus-action-hover);
+}
+:is(.ludus-btn--danger, .ludus-review-btn--danger) {
+  --bs-btn-disabled-color: var(--ludus-action-danger);
+  color: var(--ludus-action-danger); border-color: var(--ludus-action-danger);
+  background: var(--ludus-action-danger-tint);
+}
+:is(.ludus-btn--danger, .ludus-review-btn--danger):is(:hover, :active) {
+  color: var(--ludus-action-danger); border-color: var(--ludus-action-danger);
+  background: color-mix(in srgb, var(--bs-danger) 12%, var(--bs-body-bg));
+}
+:is(.btn-primary, .ludus-btn, .ludus-review-btn):focus-visible {
+  outline: 2px solid var(--ludus-action-focus); outline-offset: 3px;
+  box-shadow: 0 0 0 4px var(--bs-body-bg);
+}
+:is(.btn-primary, .ludus-btn, .ludus-review-btn):is(:disabled, .disabled, [aria-disabled="true"]) {
+  opacity: .6; filter: grayscale(.5); box-shadow: none; transform: none;
+  cursor: not-allowed; pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.btn-primary, .ludus-btn, .ludus-review-btn) { transition: none; }
 }
 
 /* 9. FORMULARIOS Y SWATCH */
