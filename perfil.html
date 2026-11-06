@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="./css/Perfil.css">
     <link rel="stylesheet" href="./css/footer.css">
     <link rel="stylesheet" href="./css/paletas.css"> 
+  <link rel="stylesheet" href="./css/resenias.css">
 </head>
 
 <body>
@@ -40,33 +41,7 @@
             </button>
         </div>
 
-        <!-- Menú lateral adaptado con Bootstrap Offcanvas -->
-        <aside id="menuLateral" class="perfil-sidebar card offcanvas-md offcanvas-start" tabindex="-1"
-            aria-labelledby="menuLateralLabel">
-            <div class="offcanvas-header d-md-none">
-                <h5 class="offcanvas-title" id="menuLateralLabel">Menú</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#menuLateral"
-                    aria-label="Cerrar"></button>
-            </div>
-            <div class="offcanvas-body p-0">
-                <ul class="nav flex-column w-100">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#mis-resenias">Reseñas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="./perfil.html" id="sidebar-perfil-link">Perfil</a>
-                    </li>
-                    <li class="nav-item" id="nav-item-configuracion">
-                        <a class="nav-link" href="#config-privacidad" id="sidebar-config-link">
-                            <i class="bi bi-gear me-1"></i> Configuración
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </aside>
+        
 
         <!-- Contenido de videojuegos y perfil del usuario -->
         <section class="perfil-content">
@@ -181,11 +156,6 @@
                         <span class="perfil-seccion__eyebrow">Opiniones y vivencias</span>
                         <h2 id="mis-resenias-titulo">Reseñas</h2>
                     </div>
-                    <button id="mostrar-formulario-resenia" class="btn btn-primary btn-agregar-resenia px-4 py-2"
-                        type="button" aria-expanded="false" aria-controls="modal-resenia">
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                        Agregar reseña
-                    </button>
                 </div>
 
                 <!-- Tarjetas dinámicas de reseñas -->
@@ -299,22 +269,22 @@
                             <p id="perfil-edicion-error" class="text-danger small mt-3 mb-0" role="alert" hidden></p>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">
+                            <button class="btn ludus-btn ludus-btn--secondary" type="button" data-bs-dismiss="modal">
                                 Cancelar
                             </button>
-                            <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                            <button class="btn ludus-review-btn ludus-review-btn--primary" type="submit">Guardar cambios</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Modal con el formulario para crear o editar una reseña -->
+            <!-- Modal para editar una reseña existente. -->
             <div id="modal-resenia" class="modal fade" tabindex="-1" aria-labelledby="modal-resenia-titulo"
                 aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                     <form id="formulario-resenia" class="modal-content formulario-resenia" novalidate>
                         <div class="modal-header">
-                            <h2 id="modal-resenia-titulo" class="modal-title fs-5">Escribe una reseña</h2>
+                            <h2 id="modal-resenia-titulo" class="modal-title fs-5">Editar reseña</h2>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
@@ -322,9 +292,8 @@
 
                             <!-- Busca y selecciona un juego existente en el catálogo. -->
                             <div class="mb-3">
-                                <label for="nombre-juego" class="form-label">Busca un juego</label>
-                                <input id="nombre-juego" name="nombreJuego" class="form-control" type="search"
-                                    autocomplete="off" aria-controls="juegos-coincidentes" aria-expanded="false">
+                                <label for="nombre-juego" class="form-label">Nombre del videojuego</label>
+                                <input id="nombre-juego" name="nombreJuego" class="form-control" type="text" readonly>
                                 <div class="invalid-feedback" id="nombre-juego-feedback"></div>
                                 <div id="juegos-coincidentes" class="list-group mt-2" role="listbox" hidden></div>
                                 <div id="juego-seleccionado" class="d-flex align-items-center gap-3 mt-3" hidden>
@@ -389,12 +358,13 @@
                             </fieldset>
                         </div>
 
+                        <!-- Acciones para cancelar o guardar la edición. -->
                         <div class="modal-footer">
-                            <button id="cancelar-resenia" class="btn btn-outline-secondary" type="button"
+                            <button id="cancelar-resenia" class="btn ludus-review-btn ludus-review-btn--secondary" type="button"
                                 data-bs-dismiss="modal">
                                 Cancelar
                             </button>
-                            <button class="btn btn-primary" type="submit">Publicar reseña</button>
+                            <button class="btn ludus-review-btn ludus-review-btn--primary" type="submit">Guardar cambios</button>
                         </div>
                     </form>
                 </div>
@@ -425,7 +395,9 @@
     <script src="./JS/navbar.js"></script>
     <script src="./JS/paletas.js"></script> 
     <script src="./JS/Perfil.js"></script>
+    <script src="./JS/ludus.js"></script>
     <script src="./JS/perfilUsuario.js"></script>
+    <!-- Lógica para mostrar, editar y eliminar reseñas. -->
     <script src="./JS/resenias.js"></script>
     <script src="./JS/perfilSocial.js"></script>
 

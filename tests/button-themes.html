@@ -1,0 +1,55 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Regresión de botones LUDUS</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"><link rel="stylesheet" href="../css/inicio.css"><link rel="stylesheet" href="../css/Perfil.css"><link rel="stylesheet" href="../css/paletas.css"><link rel="stylesheet" href="../css/resenias.css">
+</head><body><main class="container py-3" style="max-width:900px"><pre id="output">RUNNING</pre>
+<nav><button id="theme-toggle" class="btn btn-outline-secondary">Modo</button><button data-palette-set="neon">Neón</button><button data-palette-set="sunset">Atardecer</button><button data-palette-set="forest">Bosque</button><button data-palette-set="cyber">Cyberpunk</button></nav>
+<div class="d-flex flex-wrap gap-3 my-3"><a id="explore" class="btn btn-primary" href="../juegos.html">Explorar juegos</a><a id="auth-button" class="btn btn-primary btn-login" href="../login.html">Iniciar sesión</a><button id="cancel" class="btn ludus-btn ludus-btn--secondary">Cancelar</button><button id="danger" class="btn ludus-btn ludus-btn--danger">Eliminar</button><button id="disabled" class="btn btn-primary" disabled>Publicar reseña</button><button class="btn-close" aria-label="Cerrar"></button></div>
+<div class="row row-cols-1 row-cols-md-2 g-3" id="games"></div><div id="lista-resenias" class="my-3"></div><div id="editor"></div>
+<form class="formulario-perfil"><div class="modal-footer gap-2"><button id="editar-perfil" class="btn btn-primary" type="button">Editar perfil</button><button class="btn ludus-review-btn ludus-review-btn--primary" type="button">Guardar cambios</button></div></form>
+</main><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="../JS/ludus.js"></script><script src="../JS/theme.js"></script><script src="../JS/paletas.js"></script>
+<script>
+window.__themeReady=false;window.__themeErrors=[];
+const game={igdbId:42,nombre:'Juego real del fixture',portadaUrl:null,generos:[],plataformas:[]};
+document.getElementById('games').append(Ludus.gameCard(game,true),Ludus.gameCard(game));
+document.getElementById('lista-resenias').append(Ludus.reviewCard({idResenia:10,texto:'Una reseña breve para comprobar acciones compactas.',calificacion:4.5,autor:{idUsuario:7,nombre:'Jugador'},juego:game},7,()=>{},async()=>{}));
+Ludus.editor(document.getElementById('editor'),()=>42,async()=>{});
+(async()=>{
+ const out=document.getElementById('output'), results=[], root=document.documentElement;
+ const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ const assert=(ok,label)=>{if(!ok)throw Error(label);results.push('PASS '+label);};
+ const css=n=>getComputedStyle(n);
+ const primary=document.getElementById('explore'), secondary=document.getElementById('cancel');
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const ctx=canvas.getContext('2d');
+ const rgb=color=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].slice(0,3);};
+ const lum=channels=>channels.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);
+ const contrast=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
+ try{
+  await wait(250);
+  // Muestra los estados finales; el reloj virtual no avanza transiciones CSS con fiabilidad.
+  document.querySelectorAll('.btn').forEach(n=>n.style.transition='none');
+  const navRadius=css(document.getElementById('theme-toggle')).borderRadius;
+  const gradients=new Set(), accents=new Set();
+  for(const mode of ['light','dark'])for(const palette of ['neon','sunset','forest','cyber']){
+   if(root.dataset.bsTheme!==mode)document.getElementById('theme-toggle').click();
+   document.querySelector('[data-palette-set="'+palette+'"]').click();await wait(200);
+   assert(root.dataset.palette===palette&&root.dataset.bsTheme===mode,mode+'/'+palette+' existing JS updates theme without reload');
+   const base=css(primary).backgroundImage;gradients.add(base);accents.add(css(secondary).color);
+   assert(base!=='none'&&[...document.querySelectorAll('#games a,#editor .ludus-review-btn--primary,.formulario-perfil .ludus-review-btn--primary,#editar-perfil,#auth-button')].every(n=>css(n).backgroundImage===base),mode+'/'+palette+' hero game cards profile and modal share gradient');
+   assert([...document.querySelectorAll('#games a')].every(n=>n.getAttribute('href')==='./juegos.html?igdbId=42'),mode+'/'+palette+' game links preserve identity');
+   const border=rgb(css(secondary).borderTopColor), text=rgb(css(secondary).color), bg=rgb(css(secondary).backgroundColor);
+   assert(contrast(text,bg)>=4.5,mode+'/'+palette+' secondary text contrast >=4.5 ['+text+' / '+bg+']');
+   assert(contrast(border,bg)>=3,mode+'/'+palette+' secondary border contrast >=3');
+   for(const token of ['--ludus-primary','--ludus-secondary']){const endpoint=rgb(css(root).getPropertyValue(token).trim()).map(c=>c*.65);assert(contrast([255,255,255],endpoint)>=4.5,mode+'/'+palette+' primary endpoint '+token+' contrast >=4.5');}
+   const danger=document.getElementById('danger');assert(contrast(rgb(css(danger).color),rgb(css(danger).backgroundColor))>=4.5,mode+'/'+palette+' danger text contrast >=4.5');
+   assert(Number(css(document.getElementById('disabled')).opacity)<1&&css(document.getElementById('disabled')).pointerEvents==='none',mode+'/'+palette+' disabled state distinguished');
+   assert(css(document.getElementById('theme-toggle')).borderRadius===navRadius,mode+'/'+palette+' theme control geometry unchanged');
+   const reviewEdit=document.querySelector('.ludus-review__actions button');assert(css(reviewEdit).color===css(secondary).color&&css(reviewEdit).borderTopColor===css(secondary).borderTopColor,mode+'/'+palette+' edit and cancel share dynamic accent');
+   const like=document.querySelector('.ludus-like__button');like.disabled=false;
+   assert(css(like).color===css(secondary).color&&css(like).borderTopColor===css(secondary).borderTopColor,mode+'/'+palette+' heart uses active palette accent');
+   like.classList.add('ludus-like--active');assert(contrast(rgb(css(like).color),rgb(css(like).backgroundColor))>=4.5,mode+'/'+palette+' active heart contrast >=4.5');like.classList.remove('ludus-like--active');like.disabled=true;
+  }
+  assert(gradients.size===4&&accents.size===8,'all palettes and both modes produce distinct tokens');
+  assert(document.documentElement.scrollWidth<=innerWidth+1,'responsive layout has no horizontal overflow');
+  window.__themeReady=true;out.textContent=results.join('\n')+'\nALL PASSED';
+ }catch(e){window.__themeErrors.push(e.message);out.textContent=results.join('\n')+'\nFAIL '+e.stack;}
+})();
+</script></body></html>
