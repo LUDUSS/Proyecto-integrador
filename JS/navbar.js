@@ -27,23 +27,6 @@ if (navbar) {
             ${currentUser ? '<li class="nav-item"><a class="nav-link" href="./perfil.html" id="nav-mi-perfil-link">Mi perfil</a></li>' : ''}
           </ul>
 
-          <!-- Buscador de usuarios (solo visible si hay sesión activa) -->
-          ${currentUser ? `
-          <div class="navbar-busqueda-wrapper position-relative me-lg-3 my-2 my-lg-0">
-            <div class="input-group input-group-sm navbar-search-group">
-              <span class="input-group-text bg-body-tertiary border-end-0">
-                <i class="bi bi-search text-body-secondary" aria-hidden="true"></i>
-              </span>
-              <input id="navbar-buscar-input" class="form-control bg-body-tertiary border-start-0 ps-0"
-                type="search" placeholder="Buscar jugadores..." aria-label="Buscar jugadores" autocomplete="off">
-            </div>
-            <!-- Lista flotante de resultados -->
-            <ul id="navbar-buscar-resultados" class="dropdown-menu shadow-lg p-1 w-100 mt-1 navbar-search-dropdown"
-              style="display: none; max-height: 320px; overflow-y: auto;" role="listbox">
-            </ul>
-          </div>
-          ` : ''}
-
           <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
 
             <!-- Selector de paleta -->
