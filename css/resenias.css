@@ -1,0 +1,56 @@
+/* Componentes compartidos de reseñas. No alteran catálogo, inicio ni navegación. */
+.ludus-review, .ludus-review-modal, #modal-resenia, #modal-editar-perfil {
+  --review-accent: var(--ludus-action-accent);
+  --review-gradient: var(--ludus-action-gradient);
+}
+.ludus-review {
+  display: flex;
+  min-width: 0;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color, #363239);
+  border-radius: 1rem;
+  background: var(--bs-body-bg, #19171d);
+  box-shadow: 0 4px 18px #0000000d;
+}
+.ludus-review__content { flex: 1; min-width: 0; padding: 1.15rem 1.25rem; }
+.ludus-review__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.ludus-review__identity { display: grid; gap: .25rem; min-width: 0; }
+.ludus-review__title { color: var(--bs-body-color); font-size: 1rem; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; line-height: 1.4; }
+.ludus-review__title:hover { color: var(--review-accent); }
+.ludus-review__author { font-size: .82rem; color: var(--bs-secondary-color, #aaa); text-decoration: none; overflow-wrap: anywhere; }
+.ludus-review__score { display: inline-flex; align-items: center; flex-shrink: 0; gap: .35rem; padding: .35rem .6rem; border: 1px solid var(--ludus-action-accent); border-radius: .65rem; background: var(--ludus-action-tint); font-size: .75rem; white-space: nowrap; }
+.ludus-review__score strong { font-size: .95rem; }
+.ludus-review__star { color: var(--review-accent); font-size: 1rem; }
+.ludus-review__body { padding: .9rem 0; }
+.ludus-review__text { margin: 0; line-height: 1.65; font-size: .93rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ludus-review__expand { padding: .4rem 0 0; border: 0; background: transparent; color: var(--ludus-action-accent); font: inherit; font-size: .85rem; font-weight: 600; }
+.ludus-review__expand:focus-visible { outline: 2px solid var(--ludus-action-focus); outline-offset: 3px; }
+.ludus-review__footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .65rem; border-top: 1px solid var(--bs-border-color, #363239); padding-top: .75rem; }
+.ludus-review__date { font-size: .78rem; color: var(--bs-secondary-color, #aaa); }
+.ludus-review__actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-left: auto; }
+.ludus-review__cover { flex: 0 0 112px; display: grid; place-items: center; background: var(--ludus-action-tint); color: var(--ludus-action-accent); }
+.ludus-review__cover { position: relative; }
+.ludus-review__cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lista-resenias .ludus-review { margin-bottom: 0; }
+.ludus-review-btn { width: auto; flex: 0 0 auto; }
+.ludus-review-modal .modal-content, #modal-resenia .modal-content { border: 1px solid var(--ludus-action-accent); border-radius: 1rem; background: var(--bs-body-bg, #19171d); }
+.ludus-review-modal .modal-header, .ludus-review-modal .modal-footer, #modal-resenia .modal-header, #modal-resenia .modal-footer { padding: 1rem 1.25rem; border-color: var(--bs-border-color, #363239); gap: .65rem; }
+.ludus-review-modal .modal-body, #modal-resenia .modal-body { padding: 1.25rem; }
+.ludus-review-modal .modal-body > label { display: block; }
+.ludus-review-modal textarea, #modal-resenia textarea { min-height: 140px; }
+.ludus-review-modal .modal-title, #modal-resenia .modal-title { margin: 0; width: auto; }
+#game-detail .game-reviews__heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; }
+#game-detail .game-reviews__heading h2 { margin: 0; width: auto; }
+@media (max-width: 575.98px) {
+  .ludus-review__content { padding: 1rem; }
+  .ludus-review__header { flex-wrap: wrap; }
+  .ludus-review__cover { flex-basis: 68px; }
+  .ludus-review__actions { margin-left: 0; }
+  .ludus-review-modal .modal-footer, #modal-resenia .modal-footer { justify-content: flex-end; }
+}
+@media (min-width: 360px) and (max-width: 575.98px) {
+  /* Reservar el badge a la derecha evita una fila extra al añadir el corazón. */
+  .ludus-review--profile .ludus-review__header { flex-wrap: nowrap; }
+}
+

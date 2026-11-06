@@ -1,0 +1,78 @@
+﻿<!doctype html><meta charset="utf-8"><title>Likes LUDUS · regresiones</title><pre id="output">RUNNING</pre><iframe id="app" width="390" height="900"></iframe>
+<script>
+(async()=>{
+ const out=document.getElementById('output'),frame=document.getElementById('app'),results=[];
+ const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ const assert=(ok,label)=>{if(!ok)throw Error(label);results.push('PASS '+label);};
+ async function until(check){for(let i=0;i<200;i++){if(check())return;await wait(50);}throw Error('Timeout: '+check);}
+ const reset=seed=>fetch('/__fixture/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(seed)});
+ async function open(path){frame.src=path;await new Promise(r=>frame.onload=r);const w=frame.contentWindow;await until(()=>w.document.querySelector('.ludus-like__button:not(:disabled)'));return w;}
+ const buttons=w=>[...w.document.querySelectorAll('.ludus-like__button')];
+ const count=button=>button.querySelector('.ludus-like__count').textContent;
+ const liked=button=>button.getAttribute('aria-pressed')==='true';
+ const calls=(w,method)=>w.__calls.filter(c=>c.path.startsWith('/ludus/interaccion/')&&(!method||c.method===method));
+ try{
+ await reset({likes:[{review:9,user:8}]});
+ let w=await open('/index.html'), b=buttons(w)[0];
+ assert(count(b)==='1'&&!liked(b),'initial count and personal state from backend batch');
+ assert(calls(w,'GET').length===1&&calls(w,'GET')[0].path==='/ludus/interaccion/resenias','home reads one batch instead of one GET per card');
+ const sample={idResenia:9,texto:'Otra vista de la misma reseña',calificacion:4,autor:{idUsuario:8,nombre:'Otro'},juego:{igdbId:42,nombre:'Juego'}};
+ const duplicate=w.eval('Ludus').reviewCard(sample,null,null,null,true);w.document.getElementById('recent-reviews').append(duplicate);await until(()=>buttons(w).length===2&&buttons(w).every(x=>!x.disabled));
+ w.__hold=(path,q,method)=>method==='POST'&&path.includes('/interaccion/');b.click();b.click();await until(()=>w.__held.length===1);
+ assert(calls(w,'POST').length===1&&buttons(w).every(x=>x.disabled),'double click makes one POST and locks all copies');
+ assert(count(b)==='1'&&!liked(b),'pending mutation retains last confirmed server state');
+ w.__hold=null;w.__held.shift().resolve();await until(()=>buttons(w).every(x=>!x.disabled&&liked(x)&&count(x)==='2'));
+ assert(true,'POST 201 updates all visible copies without reload');
+ assert(calls(w,'POST')[0].body===null&&calls(w,'POST')[0].headers.Authorization==='Bearer fixture-token','POST has no author body and uses LUDUS JWT');
+ assert(b.querySelector('path').getAttribute('fill')==='currentColor','liked heart is filled');
+ b.click();await until(()=>buttons(w).every(x=>!x.disabled&&!liked(x)&&count(x)==='1'));
+ assert(calls(w,'DELETE').length===1&&calls(w,'GET').length>=3,'DELETE 204 followed by authoritative GET');
+ assert(b.querySelector('path').getAttribute('fill')==='none','unliked heart is outlined');
+ for(const status of [400,403,404,503]){
+   w.__likeFailure={method:'POST',status};const before=calls(w,'POST').length;b.click();await until(()=>!b.disabled&&b.closest('.ludus-like').querySelector('[role=status]').textContent);
+   assert(!liked(b)&&count(b)==='1'&&calls(w,'POST').length===before+1,'HTTP '+status+' restores confirmed state without write retry');
+ }
+ w.__likeFailure={method:'POST',status:409,commit:true};const before409=calls(w,'POST').length;b.click();await until(()=>!b.disabled&&liked(b)&&count(b)==='2');
+ assert(calls(w,'POST').length===before409+1,'409 reconciles with GET without duplicate POST');
+ w.__likeFailure={method:'DELETE',status:403};b.click();await until(()=>!b.disabled&&b.closest('.ludus-like').querySelector('[role=status]').textContent.includes('permiso'));
+ assert(liked(b)&&count(b)==='2','failed DELETE preserves previous heart and count');
+ w.__likeFailure={method:'GET',status:503};b.click();await until(()=>!b.disabled&&b.closest('.ludus-like').textContent.includes('El cambio se guardó'));
+ const writesBeforeRead=calls(w).filter(c=>c.method!=='GET').length;w.__likeFailure=null;b.click();await until(()=>!b.disabled&&!liked(b)&&count(b)==='1');
+ assert(calls(w).filter(c=>c.method!=='GET').length===writesBeforeRead,'uncertain DELETE result performs read only before allowing another write');
+ w.__likeFailure={method:'POST',status:0,commit:true};const beforeNetwork=calls(w,'POST').length;b.click();await until(()=>!b.disabled&&liked(b)&&count(b)==='2');
+ assert(calls(w,'POST').length===beforeNetwork+1,'lost POST response reconciles committed result without retrying write');w.__likeFailure=null;
+ b.click();await until(()=>!b.disabled&&!liked(b));
+ w.__hold=(path,q,method)=>method==='POST'&&path.includes('/interaccion/');b.click();await until(()=>w.__held.length===1);
+ w.sessionStorage.setItem('ludus_access_token','fixture-token-9');w.dispatchEvent(new w.Event('focus'));await until(()=>!b.disabled&&!liked(b)&&count(b)==='2');
+ w.__hold=null;w.__held.shift().resolve();await wait(100);
+ assert(!liked(b)&&count(b)==='2','response from previous JWT cannot overwrite new user state');
+ b.click();await until(()=>!b.disabled&&liked(b)&&count(b)==='3');assert(calls(w,'POST').at(-1).headers.Authorization==='Bearer fixture-token-9','new account mutation uses its own JWT');
+ w=await open('/index.html?as=9');b=buttons(w)[0];assert(liked(b)&&count(b)==='3','reload reads persisted backend state for current user');
+ w=await open('/perfil.html?idUsuario=8&as=9');b=buttons(w)[0];await until(()=>w.document.getElementById('perfil-total-likes').textContent==='3');
+ assert(liked(b)&&count(b)==='3','foreign profile review shares same counter and personal state');
+ const profileReads=w.__calls.filter(c=>c.path==='/ludus/perfil/8').length;b.click();await until(()=>!b.disabled&&!liked(b)&&count(b)==='2'&&w.document.getElementById('perfil-total-likes').textContent==='2');
+ assert(w.__calls.filter(c=>c.path==='/ludus/perfil/8').length>profileReads,'received-like statistics are refreshed from profile API');
+ w=await open('/juegos.html?igdbId=42');b=buttons(w)[0];assert(liked(b)&&count(b)==='2','game detail uses same MySQL-backed state for original user');
+ b.click();await until(()=>!b.disabled&&!liked(b)&&count(b)==='1');assert(true,'unlike in game detail synchronizes persisted count');
+ w=await open('/perfil.html?paging=1');b=buttons(w)[0];assert(count(b)==='0','own review starts with zero likes from backend');b.click();await until(()=>!b.disabled&&liked(b)&&count(b)==='1'&&w.document.getElementById('perfil-total-likes').textContent==='1');
+ assert(true,'own-review like is permitted and updates received likes');
+ w.__hold=(path,q,method)=>path==='/ludus/perfil/me'&&method==='GET'&&w.__held.length===0;
+ b.click();await until(()=>w.__held.length===1&&!b.disabled&&!liked(b));b.click();await until(()=>!b.disabled&&liked(b));await wait(100);w.__hold=null;w.__held.shift().resolve();await wait(100);
+ assert(w.document.getElementById('perfil-total-likes').textContent==='1','late profile read cannot overwrite newer received-like statistics');
+ assert([...w.document.querySelectorAll('button')].some(x=>x.textContent==='Editar')&&[...w.document.querySelectorAll('button')].some(x=>x.textContent==='Eliminar'),'like keeps edit and delete actions');
+ assert(w.document.documentElement.scrollWidth<=w.innerWidth+1,'like controls preserve mobile layout');
+ const oldStorageKeys=['ludus_catalogo_resenias','resenias-videojuegos'];assert(oldStorageKeys.every(key=>!w.localStorage.getItem(key)),'likes never write localStorage counters');
+ w.__likeFailure={method:'DELETE',status:401};b.click();await until(()=>w.location.pathname.endsWith('login.html'));assert(true,'401 follows existing expired-session login flow');
+ const extra=Array.from({length:53},(_,i)=>({id:100+i,author:8}));await reset({reviews:[...extra,{id:200,author:8}]});
+ w=await open('/index.html');const start=calls(w,'GET').length;
+ for(const r of extra)w.document.getElementById('recent-reviews').append(w.eval('Ludus').reviewCard({...sample,idResenia:r.id},null,null,null,true));
+ await until(()=>buttons(w).length===54&&buttons(w).every(x=>!x.disabled));
+ const batches=calls(w,'GET').slice(start);assert(batches.length===2&&batches.every(c=>new URLSearchParams(c.query).get('ids').split(',').length<=50),'53 cards load in batches of 50 and 3');
+ w.__likeFailure={method:'GET',status:503};const unloaded=w.eval('Ludus').reviewCard({...sample,idResenia:200},null,null,null,true);w.document.getElementById('recent-reviews').append(unloaded);await until(()=>unloaded.querySelector('[role=status]').textContent);const unloadedButton=unloaded.querySelector('.ludus-like__button');assert(unloadedButton.disabled&&count(unloadedButton)==='—'&&!unloadedButton.hasAttribute('aria-pressed'),'failed initial GET never fabricates zero likes or personal state');
+ const beforeRetry=calls(w).filter(c=>c.method!=='GET').length;w.__likeFailure=null;unloaded.querySelector('.ludus-like__retry').click();await until(()=>!unloadedButton.disabled);assert(count(unloadedButton)==='0'&&!liked(unloadedButton)&&calls(w).filter(c=>c.method!=='GET').length===beforeRetry,'initial read retry recovers using GET only');
+ await reset({likes:[{review:10,user:8}]});w=await open('/perfil.html?paging=1');await until(()=>w.document.getElementById('perfil-total-likes').textContent==='1');[...w.document.querySelectorAll('button')].find(x=>x.textContent==='Eliminar').click();await until(()=>!w.document.querySelector('#lista-resenias article')&&w.document.getElementById('perfil-total-likes').textContent==='0');assert(true,'deleting a liked review refreshes received-like statistics');
+ assert(w.__errors.length===0,'like workflows have no uncaught JS errors');
+ out.textContent=results.join('\n')+'\nALL PASSED';
+ }catch(e){out.textContent=results.join('\n')+'\nFAIL '+e.stack+'\nERRORS '+JSON.stringify(frame.contentWindow.__errors)+'\nBODY '+frame.contentDocument.body.textContent;}
+})();
+</script>

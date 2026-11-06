@@ -30,11 +30,12 @@
           <button class="btn btn-primary w-100" type="submit">Iniciar sesión</button>
         </form>
         <p class="mt-4 mb-0 text-center">¿No tienes cuenta? <a href="./registro.html">Crear cuenta</a></p>
-        <p class="small text-body-secondary mt-4 mb-0">Demo académica: las cuentas se guardan solo en este navegador.</p>
+        
       </div>
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./JS/api.js"></script>
   <script src="./JS/auth.js"></script>
   <script src="./JS/navbar.js"></script>
   <script src="./JS/theme.js"></script>
@@ -48,19 +49,24 @@
       message.className = "alert alert-warning";
     }
 
-    loginForm.addEventListener("submit", (event) => {
+    loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       message.className = "alert d-none";
+      const submitButton = loginForm.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
 
       try {
-        loginUser({
+        await loginUser({
           email: loginForm.email.value,
           password: loginForm.password.value
         });
         window.location.href = getPostLoginDestination();
       } catch (error) {
-        message.textContent = error.message;
+        message.textContent = error instanceof Error
+          ? error.message
+          : "No se pudo iniciar sesión. Inténtalo de nuevo.";
         message.className = "alert alert-danger";
+        submitButton.disabled = false;
       }
     });
   </script>
