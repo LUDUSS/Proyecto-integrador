@@ -603,39 +603,9 @@ body {
     color: var(--bs-body-color);
 }
 
-/* Marco fijo para arrastrar la imagen sin alterar el archivo original. */
-.imagen-encuadre {
-    width: min(100%, 420px);
-    height: 220px;
-    overflow: hidden;
-    border: 1px solid var(--lines-color);
-    border-radius: 8px;
-    background: var(--bs-tertiary-bg);
-    cursor: grab;
-    touch-action: none;
-    user-select: none;
-}
-
-.imagen-encuadre:active {
-    cursor: grabbing;
-}
-
-.imagen-encuadre:focus-visible {
-    outline: 3px solid var(--bs-primary);
-    outline-offset: 2px;
-}
-
-.imagen-encuadre img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-}
-
-.imagen-encuadre[hidden],
-#imagen-juego-ayuda[hidden] {
-    display: none;
+#juego-seleccionado[hidden],
+#juego-seleccionado-imagen[hidden] {
+    display: none !important;
 }
 
 /* Apila las tarjetas de reseña y deja una separación entre ellas. */
@@ -788,6 +758,37 @@ body {
     padding: 24px;
 }
 
+.tarjeta-juego--compact .tarjeta-juego__fila {
+    min-height: 160px;
+}
+
+.tarjeta-juego--compact .tarjeta-juego__imagen {
+    min-height: 160px;
+}
+
+.tarjeta-juego--compact .tarjeta-juego__cuerpo {
+    gap: 8px;
+    padding: 16px;
+}
+
+.tarjeta-juego--compact .tarjeta-juego__descripcion .card-title {
+    margin: 0 140px 8px 0;
+}
+
+.tarjeta-juego--compact .tarjeta-juego__calificacion {
+    margin-top: 0;
+    padding-top: 8px;
+}
+
+.tarjeta-juego--compact .tarjeta-juego__calificacion p {
+    margin-bottom: 4px;
+}
+
+.tarjeta-juego--compact .wrap {
+    min-height: 34px;
+    margin-top: 4px;
+}
+
 /* Descripción */
 .tarjeta-juego__descripcion .card-title {
     margin-bottom: 16px;
@@ -874,6 +875,25 @@ body {
         min-height: 260px;
     }
 
+    .tarjeta-juego--compact .tarjeta-juego__fila,
+    .tarjeta-juego--compact .tarjeta-juego__imagen {
+        min-height: 180px;
+    }
+
+    .tarjeta-juego--compact .tarjeta-juego__imagen img {
+        min-height: 0;
+    }
+
+    .tarjeta-juego--compact .tarjeta-juego__cuerpo {
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .tarjeta-juego--compact .tarjeta-juego__descripcion .card-title {
+        margin-right: 0;
+        padding-top: 40px;
+    }
+
     .tarjeta-juego__cuerpo {
         gap: 20px;
         padding: 20px;
@@ -956,4 +976,101 @@ body {
 .perfil-usuario_nombre {
     color: var(--bs-secondary-color);
     font-size: 0.95rem;
+}
+
+/* ==============================================================
+   Funcionalidades sociales, búsqueda y privacidad - LUDUS
+   ============================================================== */
+
+/* Buscador en la barra de navegación */
+.navbar-busqueda-wrapper {
+    min-width: 210px;
+    max-width: 300px;
+}
+
+.navbar-search-group {
+    border-radius: 20px;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.navbar-search-group:focus-within {
+    box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.35);
+}
+
+.navbar-search-group .input-group-text {
+    border-radius: 20px 0 0 20px;
+}
+
+.navbar-search-group input {
+    border-radius: 0 20px 20px 0;
+}
+
+.navbar-search-dropdown {
+    border-radius: 12px;
+    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    background-color: var(--bs-body-bg);
+}
+
+.navbar-search-dropdown .dropdown-item {
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.navbar-search-dropdown .dropdown-item:hover {
+    background-color: var(--bs-tertiary-bg);
+    transform: translateX(2px);
+}
+
+/* Badge de estado de juego en actividad */
+.perfil-actividad-badge .badge {
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+/* Botón de Seguir / Dejar de seguir */
+.perfil-seguir__boton {
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.perfil-seguir__boton:hover {
+    transform: translateY(-1px);
+}
+
+/* Botón de Me gusta en reseñas */
+.btn-accion.btn-like-resenia {
+    background: transparent;
+    border: none;
+    color: var(--bs-secondary-color);
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-accion.btn-like-resenia:hover {
+    background-color: var(--bs-tertiary-bg);
+    color: #dc3545;
+    transform: scale(1.05);
+}
+
+.btn-accion.btn-like-resenia:active {
+    transform: scale(0.95);
+}
+
+/* Aviso de perfil privado */
+#perfil-privado-aviso {
+    background-color: var(--bs-body-bg);
+    border: 1px dashed var(--bs-border-color) !important;
+}
+
+/* Contenedor de acciones en tarjetas */
+.tarjeta-acciones {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }

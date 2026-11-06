@@ -4,7 +4,7 @@
     const ABOUT_ICONS = [
         { name: 'bi-controller', label: 'Control de videojuego' },
         { name: 'bi-joystick', label: 'Joystick' },
-        { name: 'bi-headset', label: 'Audífonos' },
+        { name: 'bi-headset', label: 'Audí­fonos' },
         { name: 'bi-trophy', label: 'Trofeo' },
         { name: 'bi-stars', label: 'Estrellas' }
     ];
@@ -62,6 +62,7 @@
     const averageRating = document.getElementById('perfil-promedio-calificacion');
     const reviewedGames = document.getElementById('perfil-juegos-resenados');
     const nombreUsuario = document.getElementById('nombre-usuario');
+    let localReviews = [];
 
     if (
         !alias || !aliasInput || !description || !descriptionInput || !aboutIcon

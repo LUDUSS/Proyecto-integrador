@@ -1,4 +1,4 @@
-﻿(async () => {
+(async () => {
   const L=Ludus, $=id=>document.getElementById(id), list=$('lista-resenias');
   const modal=$('modal-resenia'), form=$('formulario-resenia'), name=$('nombre-juego'), text=$('texto-resenia');
   if(!isLoggedIn()){requireAuth();return;}
