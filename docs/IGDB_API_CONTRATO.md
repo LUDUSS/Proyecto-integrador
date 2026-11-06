@@ -159,6 +159,66 @@ totalLikes cuenta interacciones recibidas en sus reseñas, juegosResenados cuent
 promedioCalificacion es la media de las calificaciones emitidas por ese usuario (null sin reseñas).
 No hay endpoints de upload/avatar/portada/colores: el backend actual no tiene esos campos.
 
+## Likes persistentes de reseñas
+
+Se reutilizan Interaccion, InteraccionRepository, InteraccionesService e InteraccionController.
+Todas estas rutas exigen JWT LUDUS y un usuario existente. No reciben id_usuario ni fecha del cliente.
+La pareja (id_usuario,id_resenia) es única; un segundo intento de dar like devuelve **409** en
+ambas rutas POST, sin cambiar id/fecha ni añadir filas. Dar like no es un toggle ni un upsert.
+Se permiten likes a reseñas propias: el código anterior no los prohibía y se conserva esa política.
+
+| Método | Ruta exacta | Respuesta / estados |
+|---|---|---|
+| POST | /ludus/interaccion/resenia/{idResenia} | Sin body. 201 LikeState; 400 ID inválido, 401, 404 reseña inexistente, 409 ya existe/conflicto concurrente |
+| DELETE | /ludus/interaccion/resenia/{idResenia} | 204 sin body. Solo elimina la pareja del usuario JWT. Idempotente si la reseña existe aunque no tenga like propio; 400,401,404 reseña inexistente |
+| GET | /ludus/interaccion/resenia/{idResenia} | 200 LikeState; 400,401,404 |
+| GET | /ludus/interaccion/resenias?ids=21,22,23 | 200 array LikeState; de 1 a 50 IDs Integer positivos. 400 lista ausente/vacía/excesiva o ID inválido;401;404 si falta alguna reseña |
+| POST | /ludus/interaccion/ | Compatibilidad: {"publicacion":{"id_resenia":21}}. 201 entidad Interaccion; 400,401,404,409. Ignora usuario, id_interaccion y fecha_like entrantes |
+| DELETE | /ludus/interaccion/{id_interaccion} | Compatibilidad:204 solo dueño;400,401,403 ajeno,404 inexistente |
+
+LikeState (el mismo DTO tras POST y GET):
+
+```json
+{"idResenia":21,"totalLikes":7,"likedByMe":true,"idInteraccion":45}
+```
+
+Sin like propio, idInteraccion es null y likedByMe=false; totalLikes incluye a todos los usuarios,
+también al autor cuando da like a su propia reseña. Los IDs son de reseña/interacción locales,
+no IGDB IDs ni id_juego. No se exponen usuarios, contraseñas ni tokens en LikeState.
+
+La consulta por lote conserva el orden de los IDs solicitados y colapsa duplicados. La cota de
+50 se aplica a la lista recibida antes de colapsarlos. Una reseña sin likes devuelve 0/false/null;
+una reseña inexistente causa 404 para todo el lote, no se omite silenciosamente.
+Se usa **una consulta SQL agregada para el lote**, más la consulta de identidad del JWT:
+las pruebas miden dos SQL tanto para una como para veinte reseñas. No consultar una tarjeta a la vez.
+Los DTO Review conservan su formato; para totalLikes/likedByMe consumir este lote y unir por idResenia.
+No se cachea el estado personal ni el contador; refrescar tras mutaciones o cambio de sesión.
+
+POST duplicado habitual: {"status":409,"error":"Ya diste like a esta resena"}.
+Si el índice único detecta una carrera, ApiErrors también devuelve 409 con mensaje genérico de integridad.
+Un DELETE por reseña realizado por otro usuario no elimina likes ajenos: únicamente intenta retirar
+el propio. El DELETE legado por idInteraccion sí responde 403 si pertenece a otra persona.
+
+El perfil sigue calculando totalLikes como SUMA de interacciones recibidas en todas las reseñas
+del autor, no likes emitidos ni usuarios distintos globales. Quitar likes y borrar una reseña propia
+actualiza esa cifra. La eliminación de reseñas ya borra sus interacciones en la misma transacción;
+se mantiene ese código y las FK activas. Una carrera con otras escrituras puede causar 409/rollback,
+sin dejar huérfanos; refrescar la reseña antes de reintentar.
+
+Persistencia: tabla interacciones existente, fecha asignada por servidor y restricción
+uk_interacciones_usuario_resenia UNIQUE(id_usuario,id_resenia). Aplicar manualmente
+docs/sql/V002_interacciones_like_unico.sql tras backup y preflight; V001 no se modifica.
+Si hay duplicados históricos, detenerse y acordar su conservación, sin borrarlos automáticamente.
+La comprobación del servicio no sustituye la restricción MySQL para proteger solicitudes concurrentes.
+
+Ejemplos sin credenciales reales:
+
+```bash
+curl -X POST -H 'Authorization: Bearer <JWT_LUDUS>' 'http://localhost:8080/ludus/interaccion/resenia/21'
+curl -H 'Authorization: Bearer <JWT_LUDUS>' 'http://localhost:8080/ludus/interaccion/resenias?ids=21,22'
+curl -X DELETE -H 'Authorization: Bearer <JWT_LUDUS>' 'http://localhost:8080/ludus/interaccion/resenia/21'
+```
+
 ## IDs, persistencia y transacciones
 
 IGDB 119133 y localGameId 4 son espacios distintos. No enviar 119133 como `juego.id_juego`.
@@ -231,8 +291,8 @@ y se deriva el autor de comentarios/interacciones del JWT.
 | POST | /ludus/comentario/ | JWT; {"publicacion":{"id_resenia":21},"texto_comentario":"Comentario"} -> 200 Comentario; usuario e id entrantes descartados |
 | GET | /ludus/interaccion/ | JWT; 200 array Interaccion |
 | GET | /ludus/interaccion/{id_interaccion} | JWT; 200 Interaccion |
-| POST | /ludus/interaccion/ | JWT; {"publicacion":{"id_resenia":21}} -> 201 Interaccion; usuario e id entrantes descartados |
-| DELETE | /ludus/interaccion/{id_interaccion} | JWT propio; 204; 403 ajeno |
+| POST | /ludus/interaccion/ | JWT; {"publicacion":{"id_resenia":21}} -> 201 Interaccion; usuario/id/fecha entrantes descartados;409 duplicado,404 reseña inexistente |
+| DELETE | /ludus/interaccion/{id_interaccion} | JWT propio;204;403 ajeno,404 inexistente |
 | GET | /ludus/seguidor/ | JWT; 200 array Seguidor |
 | GET | /ludus/seguidor/siguiendo/{id_usuario} | JWT; 200 array Seguidor |
 | GET | /ludus/seguidor/seguidores/{id_usuario} | JWT; 200 array Seguidor |

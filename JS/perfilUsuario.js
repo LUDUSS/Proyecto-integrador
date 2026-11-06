@@ -633,9 +633,13 @@
         }
     });
 
+    let profileRefreshVersion = 0;
     async function refreshServerProfile() {
+        const version = ++profileRefreshVersion;
         try {
-            serverProfile = await Ludus.profile();
+            const updated = await Ludus.profile();
+            if (version !== profileRefreshVersion) return;
+            serverProfile = updated;
             profile.alias = serverProfile.nombre;
             profile.description = serverProfile.sobreMi || '';
             showProfile(profile);
@@ -645,8 +649,11 @@
             reviewedGames.nextElementSibling.textContent = 'Juegos reseñados';
             reviewedGames.title = `${serverProfile.juegosResenados ?? '—'} juegos reseñados`;
             message.textContent = owner ? 'Avatar, portada, icono y colores se guardan sólo en este navegador; aún no se sincronizan.' : '';
-        } catch (error) { message.textContent = Ludus.errorText(error); }
+        } catch (error) { if (version === profileRefreshVersion) message.textContent = Ludus.errorText(error); }
     }
     window.addEventListener('resenias:actualizadas', refreshServerProfile);
+    window.addEventListener('likes:actualizados', (event) => {
+        if (String(event.detail?.idUsuario) === String(serverProfile.idUsuario)) refreshServerProfile();
+    });
     await refreshServerProfile();
 })();

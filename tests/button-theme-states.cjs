@@ -16,15 +16,17 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
   await call('DOM.enable');await call('CSS.enable');await call('Page.navigate',{url:'http://127.0.0.1:5510/tests/button-themes.html'});
   for(let i=0;i<200;i++){if(await evaluate('window.__themeReady'))break;const errors=await evaluate('window.__themeErrors');if(errors?.length)throw Error(errors.join('; '));await wait(100);}
   assert(await evaluate('window.__themeReady'),'Theme fixture did not finish');
+  // Sólo en la muestra visual sin JWT: habilita el corazón para inspeccionar sus pseudoestados.
+  await evaluate("document.querySelector('.ludus-like__button').disabled=false");
   const {root}=await call('DOM.getDocument');
   const check=(ok,label)=>{assert(ok,label);results.push('PASS '+label);};
   for(const mode of ['light','dark'])for(const palette of ['neon','sunset','forest','cyber']){
    await evaluate(`(()=>{if(document.documentElement.dataset.bsTheme!==${JSON.stringify(mode)})document.getElementById('theme-toggle').click();document.querySelector('[data-palette-set="${palette}"]').click();})()`);
-   for(const selector of ['#explore','#cancel','#danger']){
+   for(const selector of ['#explore','#cancel','#danger','.ludus-like__button']){
     const {nodeId}=await call('DOM.querySelector',{nodeId:root.nodeId,selector});
     await call('CSS.forcePseudoState',{nodeId,forcedPseudoClasses:['hover']});
     const hover=await evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)}),s=getComputedStyle(n),c=document.createElement('canvas'),ctx=c.getContext('2d');const rgb=v=>{ctx.fillStyle=v;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].join(',');};return {bg:rgb(s.backgroundColor),expected:rgb(s.getPropertyValue('--ludus-action-hover')),image:s.backgroundImage,color:s.color};})()`);
-    check(selector==='#explore'?hover.image.includes('gradient'):selector==='#cancel'?hover.bg===hover.expected:!!hover.color,mode+'/'+palette+' '+selector+' hover');
+    check(selector==='#explore'?hover.image.includes('gradient'):selector==='#cancel'||selector==='.ludus-like__button'?hover.bg===hover.expected:!!hover.color,mode+'/'+palette+' '+selector+' hover');
     await call('CSS.forcePseudoState',{nodeId,forcedPseudoClasses:['focus-visible']});
     const focus=await evaluate(`(()=>{const s=getComputedStyle(document.querySelector(${JSON.stringify(selector)}));return s.outlineStyle==='solid'&&s.outlineWidth==='2px';})()`);
     check(focus,mode+'/'+palette+' '+selector+' focus-visible');

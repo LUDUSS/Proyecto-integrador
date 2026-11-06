@@ -4,3 +4,5 @@ review-*.png
 button-themes-result.html
 button-themes-stderr.log
 button-states-result.txt
+likes-result.html
+likes-stderr.log

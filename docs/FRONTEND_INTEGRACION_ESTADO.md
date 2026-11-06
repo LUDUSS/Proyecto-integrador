@@ -9,6 +9,7 @@ Fecha: 2026-11-05.
 - Fichas: entrada directa por `igdbId`, portada HTTPS con fallback, descripción, géneros, plataformas, screenshots, fecha Unix UTC y escalas IGDB/LUDUS separadas. Lecturas sin crear juegos. Reseñas de todos los usuarios y rating social desde MySQL vía API.
 - Reseñas: publicar desde el modal de la ficha; editar y eliminar en ficha y perfil. Texto 1..10000, puntuación 1..5 con decimales, autor por JWT, controles sólo para autor, protección de doble envío y gestión de 403/409. Tras escritura se recargan reseñas y rating/estadísticas correspondientes. El perfil permite ver y gestionar reseñas existentes, sin acceso a creación ni búsqueda IGDB.
 - Perfil propio/ajeno: identidad, biografía y estadísticas desde API; nombre/biografía con PUT. Perfiles de autor en `perfil.html?idUsuario=...`. Se conserva personalización local de avatar, portada, recortes, iconos y colores, con aviso de que no se sincronizan.
+- Likes: corazón con contador y estado personal desde `LikeState` en Inicio, ficha y perfil; lecturas por lotes, POST/DELETE autenticados por reseña y actualización del perfil del autor desde API. No se usan contadores locales ni se importan likes antiguos.
 - API común: base configurable con `window.LUDUS_API_BASE_URL` antes de cargar `api.js`, JWT, objetos serializados una vez, 204, `status`, `Retry-After`, redirección de sesión vencida y errores específicos. Texto externo mediante DOM seguro.
 
 No se modificaron backend, Java, SQL ni contratos API; no se hicieron commits. El ajuste visual añade CSS limitado a reseñas, sus modales y botones del perfil. Se conservaron los registros originales `ludus_catalogo_resenias`, `resenias-videojuegos` y `perfil-usuario`, sin importar ni borrar reseñas. Las preferencias visuales se leen y guardan en `ludus_visual_profile:<idUsuario>` sólo al visitar el perfil del propietario autenticado. La clave histórica `perfil-usuario`, sin autor verificable, se conserva intacta y no se asigna automáticamente a ninguna cuenta.
@@ -63,7 +64,7 @@ El servidor de pruebas filtra scripts ajenos a la integración, simula Bootstrap
 - Auditoría contrastada con `docs/IGDB_API_CONTRATO.md` y `docs/IGDB_FRONTEND_GUIA.md`, ahora disponibles. La integración inicial había usado el contrato esencial del encargo.
 - Pendiente validar con JWT y servicios reales: filtros/orden contra IGDB, paginación de lookups y reseñas con varias páginas, screenshots reales, usuarios distintos, creación/duplicado/edición/borrado en MySQL y expiración en navegador. No se inventaron resultados de estas pruebas.
 - Pendiente revisión visual manual móvil/escritorio del carrusel, modales, recortes y recursos CDN, así como contraste con el diseño original. CSS y puntos de quiebre existentes se conservaron.
-- No hay endpoints de subida de avatar/portada ni adjuntos de reseñas. Las reseñas usan portada oficial IGDB; totalLikes se lee del perfil. El contrato real sí documenta `POST /ludus/interaccion/` y `DELETE /ludus/interaccion/{id}`: conectarlos a acciones de likes queda fuera de estas correcciones puntuales. Los likes locales anteriores no se borraron ni se presentan como escrituras de backend.
+- No hay endpoints de subida de avatar/portada ni adjuntos de reseñas. Las reseñas usan portada oficial IGDB. Los likes ahora se integran con las rutas por reseña y el lote `LikeState` documentados en el contrato actualizado; `totalLikes` del perfil se sigue leyendo del backend. Los likes locales anteriores no se borraron ni importaron.
 - Un juego local sin `id_api` válido conserva sus datos visibles, pero no puede consultar reseñas por el endpoint externo documentado. No se inventa una correspondencia ni un endpoint alternativo.
 - No hay importación automática de borradores antiguos. Cualquier respaldo o importación requiere un trabajo separado consentido.
 
@@ -116,3 +117,31 @@ Validación final:
 Reproducción: iniciar `node tests/frontend-fixture-server.cjs`; abrir `http://127.0.0.1:5510/tests/button-themes.html` y esperar ALL PASSED. Para estados CSS ejecutar Chrome headless con perfil temporal separado y `--remote-debugging-port=9226 about:blank`, seguido de `node tests/button-theme-states.cjs`; el runner cierra esa instancia de prueba. No usar el perfil habitual del navegador para fixtures.
 
 Backend, MySQL, endpoints, JWT y lógica de temas no se modificaron. No se borraron datos locales. Pendientes: revisión en dispositivos físicos/otros motores de navegador y recorrido con JWT real; las escrituras de la validación usaron exclusivamente datos simulados. Los controles no convencionales de navegación/personalización y enlaces sociales conservan su diseño anterior deliberadamente.
+
+## Likes persistentes de reseñas (2026-11-05)
+
+Se leyeron `IGDB_API_CONTRATO.md` y `IGDB_FRONTEND_GUIA.md`. El contrato actualizado sí expone `likedByMe`: no existe bloqueo de DTO. Review no cambió; el estado se une por `idResenia` desde:
+
+- `GET /ludus/interaccion/resenias?ids=...` → array de `LikeState`, hasta 50 IDs por lote.
+- `POST /ludus/interaccion/resenia/{idResenia}` sin body → 201 `LikeState`.
+- `DELETE /ludus/interaccion/resenia/{idResenia}` sin body → 204; luego GET del lote para obtener el contador real, sin restarlo en cliente.
+- `LikeState`: `{idResenia,totalLikes,likedByMe,idInteraccion}`. JWT mediante `consumeApi` existente; no se envían autor, fecha, correo ni ID de interacción como identidad de usuario.
+
+Cambios:
+
+- `JS/ludus.js`: corazón SVG compartido dentro de `reviewCard()` para Inicio, perfil y ficha. Contador, aria-pressed y corazón lleno/vacío reflejan exclusivamente respuestas válidas del backend. Antes de cargar se muestra «—», sin fingir cero ni estado personal. Se agrupan las tarjetas de cada render en lotes, se dividen en grupos de máximo 50 y se sincronizan todas las copias visibles de una reseña.
+- Cada reseña bloquea peticiones de escritura simultáneas y conserva el último estado confirmado mientras espera. Errores discretos en la tarjeta; 409 o respuesta perdida se reconcilian con GET sin repetir POST/DELETE. Si se guardó la escritura pero falló su lectura, el siguiente intento sólo vuelve a leer. 401 reutiliza la limpieza/redirección existente.
+- El estado en memoria pertenece únicamente a controles visibles y a la sesión actual; no hay localStorage ni caché persistente de likes. Cada tarjeta nueva, página y retorno por foco/pageshow/visibilidad consulta MySQL mediante API. Al cambiar JWT se invalida el estado personal y se descartan respuestas de la sesión anterior. No se modificó autenticación.
+- `JS/perfilUsuario.js`: evento `likes:actualizados` invalida y vuelve a leer el perfil del autor afectado, propio o ajeno. Las generaciones de consulta impiden que una respuesta de estadísticas atrasada sobrescriba otra más reciente. El borrado de reseñas conserva su refresco de estadísticas.
+- `css/paletas.css`: corazón compacto con variables semánticas compartidas, estado activo y mensajes/reintento accesibles; compatible con los cuatro temas y ambos modos. `css/resenias.css`: pequeño ajuste del encabezado de perfil móvil para conservar altura compacta al añadir el corazón. Se mantienen edición, eliminación, modales y enlaces.
+
+Pruebas finales aprobadas:
+
+- **36 regresiones específicas de likes** en `tests/likes-browser.html`: dar/quitar, estado inicial y lectura por lote, copias sincronizadas, POST sin body y JWT, doble clic, 400/401/403/404/409/503, respuesta perdida, DELETE confirmado con GET fallido, reintento sólo de lectura, cuenta nueva con petición anterior pendiente, recarga/navegación, likes propios, estadísticas recibidas y respuestas de perfil concurrentes, borrado de reseña con likes, 53 tarjetas en lotes de 50+3, lectura inicial fallida sin estado inventado y recuperación. Sin errores JS ni desbordamiento móvil.
+- Backend simulado de `tests/frontend-fixture-server.cjs`: almacenamiento sólo en memoria del proceso Node, compartido entre documentos de prueba y con actor derivado del JWT ficticio. Permite comprobar persistencia y cuentas distintas sin escribir MySQL ni localStorage. Los fixtures y resultados no son una fuente de datos de producción.
+- **64 regresiones funcionales** previas, **13 pruebas API Node**, **106 comprobaciones de temas/contraste** (incluyen corazón normal/activo en ocho combinaciones) y **73 de hover/foco/viewport con Bootstrap real**, a 320/390/1280 px. Sintaxis JS y `git diff --check` sin errores.
+- Pruebas ajustadas: `tests/frontend-fixture-server.cjs`, `tests/button-themes.html`, `tests/button-theme-states.cjs`; nuevo `tests/likes-browser.html` y exclusiones de resultados en `tests/.gitignore`.
+
+Reproducción: iniciar `node tests/frontend-fixture-server.cjs`, abrir `http://127.0.0.1:5510/tests/likes-browser.html` en un perfil de navegador aislado y esperar ALL PASSED. El fixture se reinicia con los datos sintéticos de la suite; no contacta al backend real. Las pruebas de paletas/estados conservan los comandos documentados en la etapa anterior.
+
+Pendientes operativos: validar manualmente con JWT real contra el backend/MySQL y verificar en su repositorio el despliegue de `docs/sql/V002_interacciones_like_unico.sql` con su backup/preflight. No se ejecutaron migraciones, SQL ni escrituras reales desde estas pruebas. La persistencia real depende del backend y su restricción única, no de almacenamiento del navegador. Si una reseña desaparece, el 404 afecta al lote completo según contrato: se muestra error de likes y se requiere refrescar las reseñas; no se sustituyen sus contadores por ceros ni se hacen consultas individuales N+1. Los datos locales históricos permanecen intactos, sin importación automática.

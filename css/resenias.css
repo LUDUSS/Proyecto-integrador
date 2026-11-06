@@ -49,4 +49,8 @@
   .ludus-review__actions { margin-left: 0; }
   .ludus-review-modal .modal-footer, #modal-resenia .modal-footer { justify-content: flex-end; }
 }
+@media (min-width: 360px) and (max-width: 575.98px) {
+  /* Reservar el badge a la derecha evita una fila extra al añadir el corazón. */
+  .ludus-review--profile .ludus-review__header { flex-wrap: nowrap; }
+}
 

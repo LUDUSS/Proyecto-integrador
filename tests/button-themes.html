@@ -43,6 +43,9 @@ Ludus.editor(document.getElementById('editor'),()=>42,async()=>{});
    assert(Number(css(document.getElementById('disabled')).opacity)<1&&css(document.getElementById('disabled')).pointerEvents==='none',mode+'/'+palette+' disabled state distinguished');
    assert(css(document.getElementById('theme-toggle')).borderRadius===navRadius,mode+'/'+palette+' theme control geometry unchanged');
    const reviewEdit=document.querySelector('.ludus-review__actions button');assert(css(reviewEdit).color===css(secondary).color&&css(reviewEdit).borderTopColor===css(secondary).borderTopColor,mode+'/'+palette+' edit and cancel share dynamic accent');
+   const like=document.querySelector('.ludus-like__button');like.disabled=false;
+   assert(css(like).color===css(secondary).color&&css(like).borderTopColor===css(secondary).borderTopColor,mode+'/'+palette+' heart uses active palette accent');
+   like.classList.add('ludus-like--active');assert(contrast(rgb(css(like).color),rgb(css(like).backgroundColor))>=4.5,mode+'/'+palette+' active heart contrast >=4.5');like.classList.remove('ludus-like--active');like.disabled=true;
   }
   assert(gradients.size===4&&accents.size===8,'all palettes and both modes produce distinct tokens');
   assert(document.documentElement.scrollWidth<=innerWidth+1,'responsive layout has no horizontal overflow');
