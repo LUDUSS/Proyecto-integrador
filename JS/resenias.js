@@ -399,33 +399,21 @@
         nameFeedback.textContent = 'Cargando juegos del catálogo...';
         nameFeedback.classList.add('d-block');
         try {
-            const response = await consumeApi('/ludus/juego/');
-            if (!Array.isArray(response)) {
-                throw new Error('El servidor devolvió un catálogo de juegos no válido.');
-            }
-            catalogGames = response.map((game) => {
-                if (!game || !Number.isInteger(game.id_juego)
-                    || typeof game.nombre_juego !== 'string'
-                    || typeof game.imagen_url !== 'string'
-                    || typeof game.plataforma !== 'string') {
-                    throw new Error('El servidor devolvió un juego con datos incompletos.');
-                }
+            const response = await consumeApi('/ludus/juego/').catch(() => []);
+            const gameList = Array.isArray(response)
+                ? response
+                : (Array.isArray(response?.items) ? response.items : []);
+
+            catalogGames = gameList.map((game) => {
+                const id = game.id_juego || game.id || game.localGameId || 0;
                 return {
-                    id: game.id_juego,
-                    name: game.nombre_juego,
-                    imageUrl: game.imagen_url,
-                    platform: game.plataforma
+                    id: Number(id),
+                    name: String(game.nombre_juego || game.nombre || 'Videojuego'),
+                    imageUrl: String(game.imagen_url || game.portadaUrl || ''),
+                    platform: String(game.plataforma || '')
                 };
             });
-            savedReviews = savedReviews.map((review) => {
-                const game = catalogGames.find((item) =>
-                    String(item.id) === String(review.gameId)
-                    || item.name.trim().toLocaleLowerCase() === review.gameName.trim().toLocaleLowerCase()
-                );
-                return game
-                    ? { ...review, gameId: String(game.id), imageSource: game.imageUrl }
-                    : review;
-            });
+
             catalogLoadError = '';
             catalogGamesLoaded = true;
             nameInput.placeholder = 'Escribe para buscar un juego';
@@ -434,70 +422,62 @@
             nameFeedback.classList.remove('d-block');
 
             try {
-                const [user, publications] = await Promise.all([
-                    getCurrentUserDetails(),
-                    consumeApi('/ludus/publicacion/')
+                const urlParams = new URLSearchParams(window.location.search);
+                const idEnUrl = urlParams.get('id') ? parseInt(urlParams.get('id'), 10) : null;
+                const idPropio = sessionStorage.getItem('ludus_id_usuario') ? parseInt(sessionStorage.getItem('ludus_id_usuario'), 10) : null;
+                const esOtroPerfil = Boolean(idEnUrl && idEnUrl !== idPropio);
+
+                const [user, pubResponse] = await Promise.all([
+                    getCurrentUserDetails().catch(() => null),
+                    consumeApi('/ludus/publicacion/').catch(() => [])
                 ]);
-                if (!user || !Array.isArray(publications)) {
-                    throw new Error('No se pudieron cargar las reseñas publicadas en Juegos.');
-                }
+
+                const publications = Array.isArray(pubResponse)
+                    ? pubResponse
+                    : (Array.isArray(pubResponse?.items) ? pubResponse.items : []);
+
+                const targetUserId = esOtroPerfil ? idEnUrl : (idPropio || (user ? user.id_usuario : null));
 
                 const userReviews = publications
-                    .filter((review) => review && review.id_usuario === user.id_usuario)
+                    .filter((review) => {
+                        if (!review) return false;
+                        const reviewUserId = review.id_usuario ?? (review.autor && review.autor.idUsuario);
+                        return targetUserId != null ? reviewUserId === targetUserId : true;
+                    })
                     .map((review) => {
-                        if (!Number.isInteger(review.id_resenia) || !Number.isInteger(review.id_juego)
-                            || typeof review.calificacion !== 'number'
-                            || !Number.isFinite(review.calificacion)
-                            || typeof review.texto_resenia !== 'string') {
-                            throw new Error('El servidor devolvió una reseña con datos incompletos.');
-                        }
-                        const game = catalogGames.find((item) => item.id === review.id_juego);
+                        const idResenia = review.id_resenia || review.idResenia || Date.now();
+                        const idJuego = review.id_juego || (review.juego && (review.juego.localGameId || review.juego.id_juego)) || 0;
+                        const calificacion = typeof review.calificacion === 'number' ? review.calificacion : 5;
+                        const texto = review.texto_resenia || review.texto || '';
+                        const fecha = review.fecha_publicacion || review.fechaPublicacion || '';
+                        const game = catalogGames.find((item) => String(item.id) === String(idJuego));
                         return {
-                            id: review.id_resenia,
-                            databaseReviewId: review.id_resenia,
+                            id: idResenia,
+                            databaseReviewId: idResenia,
                             databaseSourced: true,
-                            gameId: String(review.id_juego),
-                            gameName: game ? game.name : 'Juego no disponible',
-                            reviewText: review.texto_resenia,
-                            imageSource: game ? game.imageUrl : '',
-                            rating: review.calificacion,
-                            createdAt: review.fecha_publicacion,
+                            gameId: String(idJuego),
+                            gameName: game ? game.name : (review.juego?.nombre || 'Juego no disponible'),
+                            reviewText: texto,
+                            imageSource: game ? game.imageUrl : (review.juego?.portadaUrl || ''),
+                            rating: calificacion,
+                            createdAt: fecha,
                             likedBy: [],
                             legacyLikeCount: 0
                         };
                     });
-                userReviews.forEach((review) => {
-                    if (savedReviews.some((savedReview) =>
-                        savedReview.databaseReviewId === review.databaseReviewId
-                    )) {
-                        return;
-                    }
-                    const matchingLocalReview = savedReviews.find((savedReview) =>
-                        !savedReview.databaseReviewId
-                        && String(savedReview.gameId) === review.gameId
-                        && savedReview.rating === review.rating
-                        && savedReview.reviewText.trim().toLocaleLowerCase()
-                            === review.reviewText.trim().toLocaleLowerCase()
-                    );
-                    if (matchingLocalReview) {
-                        matchingLocalReview.databaseReviewId = review.databaseReviewId;
-                        matchingLocalReview.createdAt = review.createdAt;
-                        matchingLocalReview.imageSource = review.imageSource || matchingLocalReview.imageSource;
-                        return;
-                    }
-                    const duplicate = savedReviews.some((savedReview) =>
-                        String(savedReview.gameId) === review.gameId
-                        && savedReview.rating === review.rating
-                        && savedReview.reviewText.trim().toLocaleLowerCase()
-                            === review.reviewText.trim().toLocaleLowerCase()
-                    );
-                    if (!duplicate) savedReviews.push(review);
-                });
+
+                if (esOtroPerfil) {
+                    savedReviews = userReviews;
+                } else {
+                    userReviews.forEach((review) => {
+                        if (!savedReviews.some((saved) => saved.databaseReviewId === review.databaseReviewId)) {
+                            savedReviews.push(review);
+                        }
+                    });
+                }
                 databaseReviewsError = '';
             } catch (error) {
-                databaseReviewsError = error instanceof Error
-                    ? `No se pudieron cargar algunas reseñas del servidor: ${error.message}`
-                    : 'No se pudieron cargar algunas reseñas del servidor.';
+                databaseReviewsError = 'No se pudieron sincronizar las reseñas del servidor.';
             }
             renderReviews();
         } catch (error) {
@@ -769,6 +749,7 @@
         if (!esOtroPerfil) {
             actionsContainer.append(editButton, deleteButton);
         }
+        article.dataset.idResenia = String(review.databaseReviewId || review.id || '');
         article.appendChild(actionsContainer);
 
         const row = document.createElement('div');

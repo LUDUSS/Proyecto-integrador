@@ -3,14 +3,11 @@
  * Conexión completa entre Frontend y Backend de Spring Boot.
  */
 (() => {
-    const API = "http://localhost:8080/ludus";
-
     // Elementos del DOM
     const btnSeguir = document.getElementById("btn-seguir");
     const btnSeguirTexto = document.getElementById("btn-seguir-texto");
     const editarPerfilBtn = document.getElementById("editar-perfil");
     const agregarReseniaBtn = document.getElementById("mostrar-formulario-resenia");
-    const totalReseniasEl = document.getElementById("perfil-total-resenias");
     const totalSeguidoresEl = document.getElementById("perfil-total-seguidores");
     const totalSiguiendoEl = document.getElementById("perfil-total-siguiendo");
     const juegoActivoBadge = document.getElementById("perfil-juego-activo");
@@ -43,6 +40,24 @@
     let usuarioVisto = null;
 
     /**
+     * Helper para invocar la API con token de autenticación automático
+     */
+    async function apiRequest(endpoint, options = {}) {
+        if (typeof consumeApi === "function") {
+            return consumeApi(endpoint, options);
+        }
+        const headers = { Accept: "application/json", ...(options.headers || {}) };
+        const token = typeof getAuthToken === "function" ? getAuthToken() : null;
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const resp = await fetch(`https://backend-ludus.onrender.com${endpoint}`, {
+            ...options,
+            headers
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp.status === 204 ? null : resp.json();
+    }
+
+    /**
      * Inicialización del flujo de perfil
      */
     async function inicializar() {
@@ -70,12 +85,19 @@
         const guardado = sessionStorage.getItem("ludus_id_usuario");
         if (guardado) return parseInt(guardado, 10);
 
-        if (!currentUser || !currentUser.email) return null;
+        if (!currentUser) return null;
 
         try {
-            const resp = await fetch(`${API}/usuario/correo/${encodeURIComponent(currentUser.email)}`);
-            if (resp.ok) {
-                const data = await resp.json();
+            // 1. Intentar consultar perfil propio directo mediante JWT
+            const perfilMe = await apiRequest("/ludus/perfil/me").catch(() => null);
+            if (perfilMe && perfilMe.idUsuario) {
+                sessionStorage.setItem("ludus_id_usuario", String(perfilMe.idUsuario));
+                return perfilMe.idUsuario;
+            }
+
+            // 2. Fallback: consultar por correo
+            if (currentUser.email) {
+                const data = await apiRequest(`/ludus/usuario/correo/${encodeURIComponent(currentUser.email)}`).catch(() => null);
                 if (data && data.id_usuario) {
                     sessionStorage.setItem("ludus_id_usuario", String(data.id_usuario));
                     return data.id_usuario;
@@ -101,9 +123,8 @@
 
         if (idUsuarioActual) {
             try {
-                const resp = await fetch(`${API}/usuario/${idUsuarioActual}`);
-                if (resp.ok) {
-                    const u = await resp.json();
+                const u = await apiRequest(`/ludus/usuario/${idUsuarioActual}`).catch(() => null);
+                if (u) {
                     usuarioVisto = u;
 
                     // Juego activo
@@ -112,10 +133,9 @@
                     // Sincronizar formulario de configuración
                     if (togglePublico) togglePublico.checked = u.perfil_publico ?? true;
                     if (juegoActivoInput) juegoActivoInput.value = u.juego_activo || "";
-
-                    // Cargar métricas de seguidores y siguiendo
-                    await cargarMetricasSeguimiento(idUsuarioActual);
                 }
+                // Cargar métricas de seguidores y siguiendo
+                await cargarMetricasSeguimiento(idUsuarioActual);
             } catch (err) {
                 console.warn("Aviso al consultar usuario propio en API:", err);
             }
@@ -129,15 +149,15 @@
         if (editarPerfilBtn) editarPerfilBtn.hidden = true;
         if (agregarReseniaBtn) agregarReseniaBtn.hidden = true;
         if (navItemConfig) navItemConfig.classList.add("d-none");
+        if (configSeccion) configSeccion.hidden = true;
 
         try {
-            const resp = await fetch(`${API}/usuario/${idAjeno}`);
-            if (!resp.ok) {
+            const u = await apiRequest(`/ludus/usuario/${idAjeno}`).catch(() => null);
+            if (!u) {
                 mostrarAlertaError("El usuario que buscas no fue encontrado.");
                 return;
             }
 
-            const u = await resp.json();
             usuarioVisto = u;
 
             // Renderizar nombre y alias del usuario consultado
@@ -199,18 +219,16 @@
     async function cargarMetricasSeguimiento(idUsuario) {
         if (!idUsuario) return;
         try {
-            const [respSeguidores, respSiguiendo] = await Promise.all([
-                fetch(`${API}/seguidor/seguidores/${idUsuario}`),
-                fetch(`${API}/seguidor/siguiendo/${idUsuario}`)
+            const [seguidores, siguiendo] = await Promise.all([
+                apiRequest(`/ludus/seguidor/seguidores/${idUsuario}`).catch(() => []),
+                apiRequest(`/ludus/seguidor/siguiendo/${idUsuario}`).catch(() => [])
             ]);
 
-            if (respSeguidores.ok && totalSeguidoresEl) {
-                const seguidores = await respSeguidores.json();
+            if (Array.isArray(seguidores) && totalSeguidoresEl) {
                 totalSeguidoresEl.textContent = String(seguidores.length);
             }
 
-            if (respSiguiendo.ok && totalSiguiendoEl) {
-                const siguiendo = await respSiguiendo.json();
+            if (Array.isArray(siguiendo) && totalSiguiendoEl) {
                 totalSiguiendoEl.textContent = String(siguiendo.length);
             }
         } catch (e) {
@@ -233,12 +251,11 @@
 
         // Comprobar si ya lo sigue
         try {
-            const resp = await fetch(`${API}/seguidor/siguiendo/${idUsuarioActual}`);
-            if (resp.ok) {
-                const siguiendo = await resp.json();
-                const yaSigue = siguiendo.some((s) => s.idSeguido === idAjeno);
-                actualizarEstadoBotonSeguir(yaSigue);
-            }
+            const siguiendo = await apiRequest(`/ludus/seguidor/siguiendo/${idUsuarioActual}`).catch(() => []);
+            const yaSigue = Array.isArray(siguiendo) && siguiendo.some((s) =>
+                (s && s.seguido && s.seguido.id_usuario === idAjeno) || (s && s.idSeguido === idAjeno)
+            );
+            actualizarEstadoBotonSeguir(yaSigue);
         } catch (e) {
             actualizarEstadoBotonSeguir(false);
         }
@@ -250,22 +267,18 @@
             try {
                 if (esSiguiendo) {
                     // Dejar de seguir
-                    const delResp = await fetch(`${API}/seguidor/dejar?idSeguidor=${idUsuarioActual}&idSeguido=${idAjeno}`, {
+                    await apiRequest(`/ludus/seguidor/dejar?idSeguidor=${idUsuarioActual}&idSeguido=${idAjeno}`, {
                         method: "DELETE"
                     });
-                    if (delResp.ok) {
-                        actualizarEstadoBotonSeguir(false);
-                        await cargarMetricasSeguimiento(idAjeno);
-                    }
+                    actualizarEstadoBotonSeguir(false);
+                    await cargarMetricasSeguimiento(idAjeno);
                 } else {
                     // Seguir
-                    const postResp = await fetch(`${API}/seguidor/seguir?idSeguidor=${idUsuarioActual}&idSeguido=${idAjeno}`, {
+                    await apiRequest(`/ludus/seguidor/seguir?idSeguidor=${idUsuarioActual}&idSeguido=${idAjeno}`, {
                         method: "POST"
                     });
-                    if (postResp.ok) {
-                        actualizarEstadoBotonSeguir(true);
-                        await cargarMetricasSeguimiento(idAjeno);
-                    }
+                    actualizarEstadoBotonSeguir(true);
+                    await cargarMetricasSeguimiento(idAjeno);
                 }
             } catch (err) {
                 console.error("Error al procesar seguimiento:", err);
@@ -329,21 +342,17 @@
                 const nuevoJuego = juegoActivoInput ? juegoActivoInput.value.trim() : "";
 
                 try {
-                    const [respPriv, respJuego] = await Promise.all([
-                        fetch(`${API}/usuario/${idUsuarioActual}/privacidad?perfil_publico=${nuevoPublico}`, {
+                    await Promise.all([
+                        apiRequest(`/ludus/usuario/${idUsuarioActual}/privacidad?perfil_publico=${nuevoPublico}`, {
                             method: "PATCH"
                         }),
-                        fetch(`${API}/usuario/${idUsuarioActual}/juego-activo?juego_activo=${encodeURIComponent(nuevoJuego)}`, {
+                        apiRequest(`/ludus/usuario/${idUsuarioActual}/juego-activo?juego_activo=${encodeURIComponent(nuevoJuego)}`, {
                             method: "PATCH"
                         })
                     ]);
 
-                    if (respPriv.ok && respJuego.ok) {
-                        actualizarBadgeJuegoActivo(nuevoJuego);
-                        mostrarMensajeConfig("¡Ajustes guardados correctamente!", true);
-                    } else {
-                        mostrarMensajeConfig("No se pudieron guardar los ajustes en el servidor.", false);
-                    }
+                    actualizarBadgeJuegoActivo(nuevoJuego);
+                    mostrarMensajeConfig("¡Ajustes guardados correctamente!", true);
                 } catch (err) {
                     console.error("Error al guardar ajustes:", err);
                     mostrarMensajeConfig("Error de conexión al guardar los ajustes.", false);
@@ -378,8 +387,8 @@
                 const accionesContenedor = tarjeta.querySelector(".tarjeta-acciones");
                 if (!accionesContenedor) return;
 
-                // ID virtual o real de la reseña
-                const idResenia = index + 1;
+                // ID de la reseña
+                const idResenia = tarjeta.dataset.idResenia ? parseInt(tarjeta.dataset.idResenia, 10) : (index + 1);
 
                 const btnLike = document.createElement("button");
                 btnLike.type = "button";
@@ -391,12 +400,11 @@
                 accionesContenedor.prepend(btnLike);
 
                 // Consultar contador inicial desde Spring Boot
-                fetch(`${API}/interaccion/resenia/${idResenia}${idUsuarioActual ? `?idUsuario=${idUsuarioActual}` : ""}`)
-                    .then((r) => (r.ok ? r.json() : null))
+                apiRequest(`/ludus/interaccion/resenia/${idResenia}`)
                     .then((data) => {
                         if (data) {
-                            btnLike.querySelector(".like-contador").textContent = data.total;
-                            if (data.likeado) {
+                            btnLike.querySelector(".like-contador").textContent = data.totalLikes || data.total || 0;
+                            if (data.likedByMe || data.likeado) {
                                 btnLike.querySelector("i").className = "bi bi-heart-fill text-danger";
                             }
                         }
@@ -411,19 +419,18 @@
                         return;
                     }
 
+                    const yaLikeado = btnLike.querySelector("i").classList.contains("bi-heart-fill");
                     try {
-                        const postResp = await fetch(`${API}/interaccion/toggle?idUsuario=${idUsuarioActual}&idResenia=${idResenia}`, {
-                            method: "POST"
-                        });
-                        if (postResp.ok) {
-                            const updateResp = await fetch(`${API}/interaccion/resenia/${idResenia}?idUsuario=${idUsuarioActual}`);
-                            if (updateResp.ok) {
-                                const info = await updateResp.json();
-                                btnLike.querySelector(".like-contador").textContent = info.total;
-                                btnLike.querySelector("i").className = info.likeado
-                                    ? "bi bi-heart-fill text-danger"
-                                    : "bi bi-heart";
-                            }
+                        if (yaLikeado) {
+                            await apiRequest(`/ludus/interaccion/resenia/${idResenia}`, { method: "DELETE" }).catch(() => null);
+                            btnLike.querySelector("i").className = "bi bi-heart";
+                            const countEl = btnLike.querySelector(".like-contador");
+                            countEl.textContent = String(Math.max(0, (parseInt(countEl.textContent, 10) || 1) - 1));
+                        } else {
+                            await apiRequest(`/ludus/interaccion/resenia/${idResenia}`, { method: "POST" }).catch(() => null);
+                            btnLike.querySelector("i").className = "bi bi-heart-fill text-danger";
+                            const countEl = btnLike.querySelector(".like-contador");
+                            countEl.textContent = String((parseInt(countEl.textContent, 10) || 0) + 1);
                         }
                     } catch (err) {
                         console.error("Error al alternar me gusta:", err);

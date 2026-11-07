@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/ludus";
+const API_URL = "https://backend-ludus.onrender.com/ludus";
 const navbar = document.getElementById("navbar");
 
 if (navbar) {
@@ -124,7 +124,7 @@ function escapeHtml(value) {
 }
 
 /**
- * Conecta el buscador de la navbar con el endpoint de búsqueda en Spring Boot.
+ * Conecta el buscador de la navbar con el endpoint de búsqueda en Spring Boot (/ludus/usuario/buscar).
  */
 function inicializarBuscadorNavbar() {
   const buscarInput = document.getElementById("navbar-buscar-input");
@@ -146,13 +146,17 @@ function inicializarBuscadorNavbar() {
 
     debounceTimer = setTimeout(async () => {
       try {
-        const resp = await fetch(`${API_URL}/usuario/buscar?q=${encodeURIComponent(query)}`);
-        if (!resp.ok) throw new Error("Error en la búsqueda");
-        const usuarios = await resp.json();
+        let usuarios = [];
+        if (typeof consumeApi === "function") {
+          usuarios = await consumeApi(`/ludus/usuario/buscar?q=${encodeURIComponent(query)}`);
+        } else {
+          const resp = await fetch(`${API_URL}/usuario/buscar?q=${encodeURIComponent(query)}`);
+          if (resp.ok) usuarios = await resp.json();
+        }
 
         resultadosMenu.innerHTML = "";
 
-        if (!usuarios || usuarios.length === 0) {
+        if (!Array.isArray(usuarios) || usuarios.length === 0) {
           resultadosMenu.innerHTML = `
             <li class="px-3 py-2 text-center text-body-secondary small">
               <i class="bi bi-search me-1"></i> No se encontraron jugadores
@@ -178,7 +182,7 @@ function inicializarBuscadorNavbar() {
 
         resultadosMenu.style.display = "block";
       } catch (err) {
-        console.warn("No se pudo conectar con el servidor de búsqueda:", err);
+        console.warn("No se pudo realizar la búsqueda de usuarios:", err);
       }
     }, 250);
   });
@@ -204,37 +208,19 @@ function inicializarBuscadorNavbar() {
  */
 async function sincronizarUsuarioBackend(currentUser) {
   try {
-    const resp = await fetch(`${API_URL}/usuario/correo/${encodeURIComponent(currentUser.email)}`);
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.id_usuario) {
-        sessionStorage.setItem("ludus_id_usuario", String(data.id_usuario));
-        return data.id_usuario;
+    if (typeof consumeApi === "function") {
+      // 1. Intentar obtener perfil directamente por token
+      const meData = await consumeApi("/ludus/perfil/me").catch(() => null);
+      if (meData && meData.idUsuario) {
+        sessionStorage.setItem("ludus_id_usuario", String(meData.idUsuario));
+        return meData.idUsuario;
       }
-    }
 
-    // Si aún no está en la base de datos de MySQL, lo registramos para que se pueda interactuar
-    const nuevoUsuario = {
-      nombre: currentUser.name,
-      correo: currentUser.email,
-      contrasenia: "LudusPass2026*",
-      telefono: "5551234567",
-      sobre_mi: "¡Hola! Estoy jugando en LUDUS.",
-      perfil_publico: true,
-      juego_activo: ""
-    };
-
-    const regResp = await fetch(`${API_URL}/usuario/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nuevoUsuario)
-    });
-
-    if (regResp.ok) {
-      const creado = await regResp.json();
-      if (creado && creado.id_usuario) {
-        sessionStorage.setItem("ludus_id_usuario", String(creado.id_usuario));
-        return creado.id_usuario;
+      // 2. Fallback: buscar por correo
+      const userData = await consumeApi(`/ludus/usuario/correo/${encodeURIComponent(currentUser.email)}`).catch(() => null);
+      if (userData && userData.id_usuario) {
+        sessionStorage.setItem("ludus_id_usuario", String(userData.id_usuario));
+        return userData.id_usuario;
       }
     }
   } catch (error) {

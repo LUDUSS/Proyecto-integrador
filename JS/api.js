@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://backend-ludus.onrender.com";
 
 function formatLocalDateTime(date = new Date()) {
   const pad = (value) => String(value).padStart(2, "0");

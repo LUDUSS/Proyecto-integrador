@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   const listSection = document.getElementById("game-browser");
   const listElement = document.getElementById("game-list");
   const searchInput = document.getElementById("game-search");
@@ -11,58 +11,51 @@
 
   async function loadGames() {
     const response = await consumeApi("/ludus/juego/");
-    if (!Array.isArray(response)) {
-      throw new Error("El servidor devolvió un catálogo de juegos no válido.");
-    }
+    const gameList = Array.isArray(response)
+      ? response
+      : (Array.isArray(response?.items) ? response.items : []);
 
-    return response.map((game) => {
-      if (!game || !Number.isInteger(game.id_juego)
-        || typeof game.nombre_juego !== "string"
-        || typeof game.categoria !== "string"
-        || typeof game.plataforma !== "string"
-        || typeof game.descripcion !== "string"
-        || typeof game.imagen_url !== "string") {
-        throw new Error("El servidor devolvió un juego con datos incompletos.");
-      }
-
+    return gameList.map((game) => {
+      const id = game.id_juego || game.id || game.localGameId || "";
       return {
-        id: String(game.id_juego),
-        name: game.nombre_juego,
-        category: game.categoria,
-        platform: game.plataforma,
-        description: game.descripcion,
-        imageUrl: game.imagen_url
+        id: String(id),
+        name: String(game.nombre_juego || game.nombre || "Videojuego"),
+        category: String(game.categoria || "General"),
+        platform: String(game.plataforma || "Multiplataforma"),
+        description: String(game.descripcion || ""),
+        imageUrl: String(game.imagen_url || game.portadaUrl || "")
       };
     });
   }
 
   async function loadReviews() {
     const [response, users] = await Promise.all([
-      consumeApi("/ludus/publicacion/"),
-      getApiUsers()
+      consumeApi("/ludus/publicacion/").catch(() => []),
+      getApiUsers().catch(() => [])
     ]);
-    if (!Array.isArray(response)) {
-      throw new Error("El servidor devolvió una lista de reseñas no válida.");
-    }
+    const reviewList = Array.isArray(response)
+      ? response
+      : (Array.isArray(response?.items) ? response.items : []);
 
-    return response.map((review) => {
-      if (!review || !Number.isInteger(review.id_resenia)
-        || !Number.isInteger(review.id_usuario) || !Number.isInteger(review.id_juego)
-        || typeof review.calificacion !== "number"
-        || !Number.isFinite(review.calificacion)
-        || typeof review.texto_resenia !== "string"
-        || typeof review.fecha_publicacion !== "string") {
-        throw new Error("El servidor devolvió una reseña con datos incompletos.");
-      }
+    const userList = Array.isArray(users) ? users : [];
 
-      const user = users.find((item) => item && item.id_usuario === review.id_usuario);
+    return reviewList.map((review) => {
+      const idResenia = review.id_resenia || review.idResenia || Date.now();
+      const idJuego = review.id_juego || (review.juego && (review.juego.localGameId || review.juego.id_juego)) || 0;
+      const idUsuario = review.id_usuario || (review.autor && review.autor.idUsuario) || 0;
+      const user = userList.find((item) => item && item.id_usuario === idUsuario);
+      const userName = (review.autor && review.autor.nombre) || (user && user.nombre) || "Jugador";
+      const rating = typeof review.calificacion === "number" ? review.calificacion : 5;
+      const text = review.texto_resenia || review.texto || "";
+      const createdAt = review.fecha_publicacion || review.fechaPublicacion || "";
+
       return {
-        id: String(review.id_resenia),
-        gameId: String(review.id_juego),
-        userName: user && typeof user.nombre === "string" ? user.nombre : "Jugador",
-        rating: review.calificacion,
-        text: review.texto_resenia,
-        createdAt: review.fecha_publicacion
+        id: String(idResenia),
+        gameId: String(idJuego),
+        userName,
+        rating,
+        text,
+        createdAt
       };
     });
   }
