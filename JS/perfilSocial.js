@@ -20,7 +20,11 @@
     const sidebarConfigLink = document.getElementById("sidebar-config-link");
     const sidebarPerfilLink = document.getElementById("sidebar-perfil-link");
     const togglePublico = document.getElementById("toggle-perfil-publico");
-    const juegoActivoInput = document.getElementById("juego-activo-input");
+    const juegoActivoSelect = document.getElementById("juego-activo-select");
+    const configGamertagInput = document.getElementById("config-gamertag-input");
+    const perfilGamertagBadge = document.getElementById("perfil-gamertag-badge");
+    const alertaGamertagPendiente = document.getElementById("alerta-gamertag-pendiente");
+    const btnIrGamertag = document.getElementById("btn-ir-gamertag");
     const guardarConfigBtn = document.getElementById("guardar-config-btn");
     const configMensaje = document.getElementById("config-mensaje");
     const listaResenias = document.getElementById("lista-resenias");
@@ -30,6 +34,21 @@
     const perfilDescripcionEl = document.getElementById("perfil-descripcion");
 
     const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+
+    // Catálogo inicial de 40 juegos predeterminados en caso de falla de red
+    const JUEGOS_CATALOGO_FALLBACK = [
+        "God of War", "The Witcher 3", "Red Dead Redemption 2", "Grand Theft Auto V",
+        "Elden Ring", "Cyberpunk 2077", "Hogwarts Legacy", "Resident Evil 4",
+        "Minecraft", "Assassins Creed Valhalla", "Spider-Man Remastered", "Days Gone",
+        "Horizon Zero Dawn", "Doom Eternal", "Sekiro Shadows Die Twice", "Forza Horizon 5",
+        "FIFA 23", "Call of Duty Modern Warfare III", "Starfield", "Baldurs Gate 3",
+        "Hades", "Ghost of Tsushima", "Monster Hunter Rise", "It Takes Two",
+        "Resident Evil Village", "God of War Ragnarök", "Stray", "Alan Wake 2",
+        "Lies of P", "Armored Core VI", "Helldivers 2", "Dragon's Dogma 2",
+        "Black Myth: Wukong", "Tekken 8", "Final Fantasy VII Rebirth",
+        "Warhammer 40,000: Space Marine 2", "Metaphor: ReFantazio",
+        "Monster Hunter Wilds", "Kingdom Come Deliverance II", "Civilization VII"
+    ];
 
     // Detectar qué perfil se desea ver mediante el parámetro de consulta ?id=
     const urlParams = new URLSearchParams(window.location.search);
@@ -61,6 +80,23 @@
      * Inicialización del flujo de perfil
      */
     async function inicializar() {
+        // Cargar catálogo de videojuegos para el selector de actividad
+        await poblarCatalogoJuegosSelect();
+
+        // Configurar listener del botón de alerta para asignar gamertag
+        if (btnIrGamertag) {
+            btnIrGamertag.addEventListener("click", () => {
+                document.querySelectorAll(".perfil-seccion").forEach((sec) => (sec.hidden = true));
+                if (configSeccion) configSeccion.hidden = false;
+                sidebarConfigLink?.classList.add("active");
+                sidebarPerfilLink?.classList.remove("active");
+                if (configGamertagInput) {
+                    configGamertagInput.focus();
+                    configGamertagInput.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            });
+        }
+
         // Resolver ID del usuario en sesión
         idUsuarioActual = await obtenerIdPropio();
 
@@ -76,6 +112,38 @@
 
         configurarSidebar();
         configurarLikesResenias();
+    }
+
+    /**
+     * Llena el selector de juego activo con los 40 juegos registrados en MySQL (/ludus/juego/)
+     */
+    async function poblarCatalogoJuegosSelect() {
+        if (!juegoActivoSelect) return;
+        juegoActivoSelect.innerHTML = '<option value="">Ninguno / No estoy jugando nada ahora</option>';
+
+        let juegosNombres = [];
+        try {
+            const data = await apiRequest("/ludus/juego/").catch(() => null);
+            const lista = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : null);
+            if (lista && lista.length > 0) {
+                juegosNombres = lista.map((j) => j.nombre_juego || j.nombreJuego).filter(Boolean);
+            }
+        } catch (e) {
+            console.warn("No se pudo obtener el catálogo de juegos desde la API:", e);
+        }
+
+        if (juegosNombres.length === 0) {
+            juegosNombres = JUEGOS_CATALOGO_FALLBACK;
+        }
+
+        juegosNombres.sort((a, b) => a.localeCompare(b));
+
+        juegosNombres.forEach((nombre) => {
+            const opt = document.createElement("option");
+            opt.value = nombre;
+            opt.textContent = nombre;
+            juegoActivoSelect.appendChild(opt);
+        });
     }
 
     /**
@@ -127,12 +195,40 @@
                 if (u) {
                     usuarioVisto = u;
 
+                    // Mostrar gamertag o alerta si no tiene
+                    if (u.gamertag && u.gamertag.trim()) {
+                        if (perfilGamertagBadge) {
+                            perfilGamertagBadge.textContent = `@${u.gamertag.trim()}`;
+                            perfilGamertagBadge.hidden = false;
+                        }
+                        if (alertaGamertagPendiente) alertaGamertagPendiente.hidden = true;
+                        if (configGamertagInput) configGamertagInput.value = u.gamertag.trim();
+                        sessionStorage.setItem("ludus_gamertag", u.gamertag.trim());
+                    } else {
+                        if (perfilGamertagBadge) perfilGamertagBadge.hidden = true;
+                        if (alertaGamertagPendiente) alertaGamertagPendiente.hidden = false;
+                        if (configGamertagInput) configGamertagInput.value = "";
+                        sessionStorage.removeItem("ludus_gamertag");
+                    }
+
+                    // Foto de perfil desde BD si existe
+                    if (u.foto_perfil) {
+                        sessionStorage.setItem("ludus_foto_perfil", u.foto_perfil);
+                        const avatarImg = document.getElementById("perfil-avatar-imagen");
+                        const avatarPlaceholder = document.querySelector(".perfil-avatar__placeholder");
+                        if (avatarImg) {
+                            avatarImg.src = u.foto_perfil;
+                            avatarImg.hidden = false;
+                        }
+                        if (avatarPlaceholder) avatarPlaceholder.hidden = true;
+                    }
+
                     // Juego activo
                     actualizarBadgeJuegoActivo(u.juego_activo);
 
                     // Sincronizar formulario de configuración
                     if (togglePublico) togglePublico.checked = u.perfil_publico ?? true;
-                    if (juegoActivoInput) juegoActivoInput.value = u.juego_activo || "";
+                    if (juegoActivoSelect) juegoActivoSelect.value = u.juego_activo || "";
                 }
                 // Cargar métricas de seguidores y siguiendo
                 await cargarMetricasSeguimiento(idUsuarioActual);
@@ -167,6 +263,30 @@
                 perfilDescripcionEl.textContent = u.sobre_mi && u.sobre_mi.trim()
                     ? u.sobre_mi
                     : "Este jugador aún no ha agregado una descripción a su perfil.";
+            }
+
+            // Mostrar gamertag en perfil ajeno
+            if (perfilGamertagBadge) {
+                if (u.gamertag && u.gamertag.trim()) {
+                    perfilGamertagBadge.textContent = `@${u.gamertag.trim()}`;
+                    perfilGamertagBadge.hidden = false;
+                } else {
+                    perfilGamertagBadge.hidden = true;
+                }
+            }
+
+            // Mostrar foto de perfil ajena
+            const avatarImg = document.getElementById("perfil-avatar-imagen");
+            const avatarPlaceholder = document.querySelector(".perfil-avatar__placeholder");
+            if (u.foto_perfil) {
+                if (avatarImg) {
+                    avatarImg.src = u.foto_perfil;
+                    avatarImg.hidden = false;
+                }
+                if (avatarPlaceholder) avatarPlaceholder.hidden = true;
+            } else {
+                if (avatarImg) avatarImg.hidden = true;
+                if (avatarPlaceholder) avatarPlaceholder.hidden = false;
             }
 
             // Validar regla de privacidad: perfil público o privado
@@ -329,7 +449,7 @@
             });
         }
 
-        // Guardar ajustes de privacidad y juego activo
+        // Guardar ajustes de privacidad, juego activo y gamertag
         if (guardarConfigBtn) {
             guardarConfigBtn.addEventListener("click", async () => {
                 if (!idUsuarioActual) {
@@ -339,23 +459,62 @@
 
                 guardarConfigBtn.disabled = true;
                 const nuevoPublico = togglePublico ? togglePublico.checked : true;
-                const nuevoJuego = juegoActivoInput ? juegoActivoInput.value.trim() : "";
+                const nuevoJuego = juegoActivoSelect ? juegoActivoSelect.value : "";
+                const nuevoGamertagRaw = configGamertagInput ? configGamertagInput.value.trim().replace(/^@/, "") : "";
+
+                // Validación de gamertag si se ingresó
+                if (nuevoGamertagRaw && !/^[a-zA-Z0-9_]{3,20}$/.test(nuevoGamertagRaw)) {
+                    mostrarMensajeConfig("El Gamertag debe tener entre 3 y 20 caracteres (solo letras, números y guión bajo).", false);
+                    guardarConfigBtn.disabled = false;
+                    return;
+                }
 
                 try {
-                    await Promise.all([
+                    const peticiones = [
                         apiRequest(`/ludus/usuario/${idUsuarioActual}/privacidad?perfil_publico=${nuevoPublico}`, {
                             method: "PATCH"
                         }),
                         apiRequest(`/ludus/usuario/${idUsuarioActual}/juego-activo?juego_activo=${encodeURIComponent(nuevoJuego)}`, {
                             method: "PATCH"
                         })
-                    ]);
+                    ];
+
+                    if (nuevoGamertagRaw) {
+                        peticiones.push(
+                            apiRequest(`/ludus/usuario/${idUsuarioActual}/gamertag?gamertag=${encodeURIComponent(nuevoGamertagRaw)}`, {
+                                method: "PATCH"
+                            })
+                        );
+                    }
+
+                    await Promise.all(peticiones);
 
                     actualizarBadgeJuegoActivo(nuevoJuego);
+
+                    // Actualizar Gamertag en la interfaz local
+                    if (nuevoGamertagRaw) {
+                        sessionStorage.setItem("ludus_gamertag", nuevoGamertagRaw);
+                        if (perfilGamertagBadge) {
+                            perfilGamertagBadge.textContent = `@${nuevoGamertagRaw}`;
+                            perfilGamertagBadge.hidden = false;
+                        }
+                        if (alertaGamertagPendiente) alertaGamertagPendiente.hidden = true;
+
+                        // Actualizar saludo en navbar
+                        const greetingEl = document.getElementById("navbar-user-greeting");
+                        const nombreUsuario = sessionStorage.getItem("ludus_user_name") || currentUser?.name || "Jugador";
+                        if (greetingEl) {
+                            greetingEl.innerHTML = `Hola, ${nombreUsuario} <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">@${nuevoGamertagRaw}</span>`;
+                        }
+                    }
+
                     mostrarMensajeConfig("¡Ajustes guardados correctamente!", true);
                 } catch (err) {
                     console.error("Error al guardar ajustes:", err);
-                    mostrarMensajeConfig("Error de conexión al guardar los ajustes.", false);
+                    const msg = (err && err.message && err.message.toLowerCase().includes("gamertag"))
+                        ? "Ese Gamertag ya está en uso por otro jugador. Por favor elige otro."
+                        : "Error de conexión al guardar los ajustes.";
+                    mostrarMensajeConfig(msg, false);
                 } finally {
                     guardarConfigBtn.disabled = false;
                 }

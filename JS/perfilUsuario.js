@@ -164,10 +164,11 @@
         aboutIcon.className = `bi ${profile.aboutIcon}`;
         profileContent.style.setProperty('--lines-color', profile['lines-color']);
 
-        avatarImage.hidden = !profile.avatar;
-        avatarPlaceholder.hidden = Boolean(profile.avatar);
-        if (profile.avatar) {
-            avatarImage.src = profile.avatar;
+        const avatarToDisplay = profile.avatar || sessionStorage.getItem('ludus_foto_perfil') || '';
+        avatarImage.hidden = !avatarToDisplay;
+        avatarPlaceholder.hidden = Boolean(avatarToDisplay);
+        if (avatarToDisplay) {
+            avatarImage.src = avatarToDisplay;
             avatarImage.style.objectPosition = `${profile.avatarPosition.x}% ${profile.avatarPosition.y}%`;
         } else {
             avatarImage.removeAttribute('src');
@@ -610,6 +611,15 @@
                 profile = updatedProfile;
                 showProfile(profile);
                 editModal.hide();
+
+                // Persistir el avatar en la base de datos (foto_perfil en MySQL)
+                const idPropio = sessionStorage.getItem('ludus_id_usuario');
+                if (idPropio && updatedProfile.avatar && typeof consumeApi === 'function') {
+                    sessionStorage.setItem('ludus_foto_perfil', updatedProfile.avatar);
+                    consumeApi(`/ludus/usuario/${idPropio}/avatar?foto_perfil=${encodeURIComponent(updatedProfile.avatar)}`, {
+                        method: 'PATCH'
+                    }).catch((e) => console.warn('No se pudo guardar avatar en la BD:', e));
+                }
             }
         } catch (error) {
             editError.textContent = error instanceof Error

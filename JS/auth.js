@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Autenticación de LUDUS y datos locales del perfil.
  */
 const LUDUS_USERS_KEY = "ludus_users";
@@ -23,10 +23,21 @@ function getCurrentUser() {
   const email = sessionStorage.getItem(LUDUS_SESSION_KEY);
   if (!email) return null;
 
+  const storedName = sessionStorage.getItem("ludus_user_name");
+  const storedGamertag = sessionStorage.getItem("ludus_gamertag");
   const user = getUsers().find((item) => item.email === email);
-  return user
-    ? { name: user.name, email: user.email }
-    : { name: email, email };
+
+  let name = storedName || (user ? user.name : null);
+  if (!name || name === email) {
+    const raw = email.split("@")[0].replace(/[._-]/g, " ");
+    name = raw.split(" ").filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
+
+  return {
+    name: name,
+    email: email,
+    gamertag: storedGamertag || (user ? user.gamertag : null)
+  };
 }
 
 async function getApiUsers() {
@@ -117,6 +128,10 @@ function clearAuthSession() {
   sessionStorage.removeItem(LUDUS_SESSION_KEY);
   sessionStorage.removeItem(LUDUS_TOKEN_KEY);
   sessionStorage.removeItem(LUDUS_TOKEN_EXPIRY_KEY);
+  sessionStorage.removeItem("ludus_id_usuario");
+  sessionStorage.removeItem("ludus_user_name");
+  sessionStorage.removeItem("ludus_gamertag");
+  sessionStorage.removeItem("ludus_foto_perfil");
 }
 
 async function registerUser({ name, email, password, telefono }) {
@@ -175,6 +190,26 @@ async function loginUser({ email, password }) {
 
   saveAuthToken(token);
   sessionStorage.setItem(LUDUS_SESSION_KEY, normalizedEmail);
+
+  // Sincronizar datos del usuario inmediatamente al iniciar sesión
+  try {
+    let userData = await consumeApi(`/ludus/usuario/correo/${encodeURIComponent(normalizedEmail)}`).catch(() => null);
+    if (!userData) {
+      const users = await consumeApi("/ludus/usuario/").catch(() => null);
+      if (Array.isArray(users)) {
+        userData = users.find((x) => x && x.correo && x.correo.toLowerCase() === normalizedEmail);
+      }
+    }
+    if (userData) {
+      const idUsuario = userData.id_usuario || userData.idUsuario;
+      if (idUsuario) sessionStorage.setItem("ludus_id_usuario", String(idUsuario));
+      if (userData.nombre) sessionStorage.setItem("ludus_user_name", userData.nombre);
+      if (userData.gamertag) sessionStorage.setItem("ludus_gamertag", userData.gamertag);
+      if (userData.foto_perfil) sessionStorage.setItem("ludus_foto_perfil", userData.foto_perfil);
+    }
+  } catch (e) {
+    console.warn("Aviso al sincronizar usuario tras login:", e);
+  }
 }
 
 function logoutUser() {

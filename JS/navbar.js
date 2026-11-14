@@ -35,11 +35,11 @@ if (navbar) {
                 <i class="bi bi-search text-body-secondary" aria-hidden="true"></i>
               </span>
               <input id="navbar-buscar-input" class="form-control bg-body-tertiary border-start-0 ps-0"
-                type="search" placeholder="Buscar jugadores..." aria-label="Buscar jugadores" autocomplete="off">
+                type="search" placeholder="Buscar por nombre o @gamertag..." aria-label="Buscar jugadores" autocomplete="off">
             </div>
             <!-- Lista flotante de resultados -->
             <ul id="navbar-buscar-resultados" class="dropdown-menu shadow-lg p-1 w-100 mt-1 navbar-search-dropdown"
-              style="display: none; max-height: 320px; overflow-y: auto;" role="listbox">
+              style="display: none; max-height: 340px; overflow-y: auto;" role="listbox">
             </ul>
           </div>
           ` : ''}
@@ -89,7 +89,7 @@ if (navbar) {
 
             <!-- Login / logout y Registro -->
             ${currentUser
-              ? `<span class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}</span>
+              ? `<span id="navbar-user-greeting" class="small text-body-secondary d-none d-xl-inline">Hola, ${escapeHtml(currentUser.name)}${currentUser.gamertag ? ` <span class="badge bg-primary-subtle text-primary border border-primary-subtle">@${escapeHtml(currentUser.gamertag)}</span>` : ''}</span>
                  <button id="auth-action" class="btn btn-login text-nowrap" type="button">Cerrar sesión</button>`
               : `<a class="btn btn-login text-nowrap" href="./login.html">Iniciar sesión</a>
                  <a class="btn btn-outline-secondary text-nowrap" href="./registro.html">Crear cuenta</a>`}
@@ -110,7 +110,7 @@ if (navbar) {
   const authAction = document.getElementById("auth-action");
   if (authAction) authAction.addEventListener("click", logoutUser);
 
-  // Inicializar buscador de usuarios si el usuario inició sesión
+  // Inicializar buscador de usuarios y sincronizar datos reales si el usuario inició sesión
   if (currentUser) {
     inicializarBuscadorNavbar();
     sincronizarUsuarioBackend(currentUser);
@@ -125,6 +125,7 @@ function escapeHtml(value) {
 
 /**
  * Conecta el buscador de la navbar con el endpoint de búsqueda en Spring Boot (/ludus/usuario/buscar).
+ * Permite buscar por nombre y por @gamertag de forma insensible a mayúsculas/minúsculas.
  */
 function inicializarBuscadorNavbar() {
   const buscarInput = document.getElementById("navbar-buscar-input");
@@ -164,15 +165,25 @@ function inicializarBuscadorNavbar() {
         } else {
           usuarios.forEach((user) => {
             const li = document.createElement("li");
+            const avatarSrc = user.foto_perfil || "./IMAGE/perfil/avatar-1.png";
+            
+            // Etiqueta del gamertag si existe, o indicación de que aún no lo asigna
+            const gamertagBadge = user.gamertag
+              ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle small ms-1">@${escapeHtml(user.gamertag)}</span>`
+              : `<span class="badge bg-secondary-subtle text-body-tertiary small ms-1" title="Este usuario aún no tiene Gamertag">Sin Gamertag</span>`;
+
             const juegoTexto = user.juego_activo
               ? `<small class="text-success text-truncate d-block"><i class="bi bi-controller me-1"></i>${escapeHtml(user.juego_activo)}</small>`
               : '<small class="text-body-secondary text-truncate d-block">Perfil de jugador</small>';
 
             li.innerHTML = `
               <a class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 rounded" href="./perfil.html?id=${user.id_usuario}">
-                <i class="bi bi-person-circle fs-5 text-primary" aria-hidden="true"></i>
-                <div class="text-truncate">
-                  <div class="fw-semibold text-truncate">${escapeHtml(user.nombre)}</div>
+                <img src="${avatarSrc}" class="rounded-circle object-fit-cover border" width="34" height="34" alt="" onerror="this.src='./IMAGE/perfil/avatar-1.png'">
+                <div class="text-truncate flex-grow-1">
+                  <div class="d-flex align-items-center justify-content-between gap-1">
+                    <span class="fw-semibold text-truncate">${escapeHtml(user.nombre)}</span>
+                    ${gamertagBadge}
+                  </div>
                   ${juegoTexto}
                 </div>
               </a>`;
@@ -204,23 +215,49 @@ function inicializarBuscadorNavbar() {
 
 /**
  * Sincroniza al usuario autenticado con MySQL a través de Spring Boot.
- * Garantiza que siempre tengamos su ID numérico de BD disponible en sessionStorage.
+ * Guarda en sessionStorage su ID, nombre real, gamertag y foto_perfil.
  */
 async function sincronizarUsuarioBackend(currentUser) {
   try {
     if (typeof consumeApi === "function") {
-      // 1. Intentar obtener perfil directamente por token
-      const meData = await consumeApi("/ludus/perfil/me").catch(() => null);
-      if (meData && meData.idUsuario) {
-        sessionStorage.setItem("ludus_id_usuario", String(meData.idUsuario));
-        return meData.idUsuario;
+      let userData = null;
+
+      // 1. Intentar consultar por correo
+      if (currentUser && currentUser.email) {
+        userData = await consumeApi(`/ludus/usuario/correo/${encodeURIComponent(currentUser.email)}`).catch(() => null);
       }
 
-      // 2. Fallback: buscar por correo
-      const userData = await consumeApi(`/ludus/usuario/correo/${encodeURIComponent(currentUser.email)}`).catch(() => null);
-      if (userData && userData.id_usuario) {
-        sessionStorage.setItem("ludus_id_usuario", String(userData.id_usuario));
-        return userData.id_usuario;
+      // 2. Si no, consultar perfil /me
+      if (!userData) {
+        userData = await consumeApi("/ludus/perfil/me").catch(() => null);
+      }
+
+      // 3. Fallback de compatibilidad: consultar lista general de usuarios
+      if (!userData) {
+        const allUsers = await consumeApi("/ludus/usuario/").catch(() => null);
+        if (Array.isArray(allUsers) && currentUser && currentUser.email) {
+          userData = allUsers.find((x) => x && x.correo && x.correo.toLowerCase() === currentUser.email.toLowerCase());
+        }
+      }
+
+      if (userData) {
+        const idUsuario = userData.id_usuario || userData.idUsuario;
+        const nombreReal = userData.nombre || (currentUser.email ? currentUser.email.split("@")[0] : "Jugador");
+
+        if (idUsuario) sessionStorage.setItem("ludus_id_usuario", String(idUsuario));
+        if (nombreReal) sessionStorage.setItem("ludus_user_name", nombreReal);
+        if (userData.gamertag) sessionStorage.setItem("ludus_gamertag", userData.gamertag);
+        if (userData.foto_perfil) sessionStorage.setItem("ludus_foto_perfil", userData.foto_perfil);
+
+        // Actualizar saludo en el navbar con el nombre real (evita que aparezca el correo)
+        const greetingEl = document.getElementById("navbar-user-greeting");
+        if (greetingEl) {
+          const displayGamertag = userData.gamertag
+            ? ` <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">@${escapeHtml(userData.gamertag)}</span>`
+            : "";
+          greetingEl.innerHTML = `Hola, ${escapeHtml(nombreReal)}${displayGamertag}`;
+        }
+        return idUsuario;
       }
     }
   } catch (error) {
